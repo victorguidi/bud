@@ -60,16 +60,34 @@ func (p *PostgresVectorDB) Save(docName, content string, embeddings interface{})
 	return nil
 }
 
-func (p *PostgresVectorDB) Retrieve(embeddings interface{}) error {
-	// SELECT * FROM embeddings WHERE vector @@ (SELECT vector FROM embeddings WHERE id = 1) ORDER BY similarity(vector, (SELECT vector FROM embeddings WHERE id = 1)) LIMIT 5;
+func (p *PostgresVectorDB) Retrieve(embeddings interface{}) (*VectorsTable, error) {
+	// Format embeddings as a string for the query
+	embeddingStr := strings.Trim(strings.Join(strings.Fields(fmt.Sprint(embeddings)), ","), "{}")
 
-	query := fmt.Sprintf("SELECT * FROM embeddings ORDER BY embeddings <-> ('%s'::vector) LIMIT 5;", strings.Trim(strings.Join(strings.Fields(fmt.Sprint(embeddings)), ","), "{}"))
+	// Correct query formation
+	query := fmt.Sprintf("SELECT * FROM embeddings ORDER BY embeddings <-> '%s'::vector LIMIT 5;", embeddingStr)
+
+	// Execute query
 	rows, err := p.db.Query(query)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer rows.Close()
-	log.Println(rows)
 
-	return nil
+	var vectorTable VectorsTable
+
+	// Process the result set
+	for rows.Next() {
+		// Scan each row into your variables
+		if err := rows.Scan(&vectorTable.Id, &vectorTable.DocName, &vectorTable.Text, &vectorTable.Vector, &vectorTable.Created_at); err != nil {
+			return nil, err
+		}
+	}
+
+	// Check for errors from iterating over rows
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return &vectorTable, nil
 }

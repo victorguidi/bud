@@ -2,10 +2,13 @@ package api
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
 )
+
+var DEFAULTFORMATER = map[string]any{"prompt": ""}
 
 type OllamaAPI struct {
 	Url   string
@@ -15,8 +18,11 @@ type OllamaAPI struct {
 
 type Extensions struct {
 	Embedder  string
+	Prompt    string
 	Streaming bool
 }
+
+type PromptFormater func(map[string]any) string
 
 type OllamaResponse struct {
 	Model      string `json:"model"`
@@ -35,6 +41,7 @@ func NewOllamaAPI() *OllamaAPI {
 		Extensions: Extensions{
 			Streaming: false,
 			Embedder:  "all-minilm",
+			Prompt:    FormatPrompt("", ""),
 		},
 	}
 }
@@ -55,13 +62,24 @@ func (o *OllamaAPI) WithStreaming(stream bool) {
 	o.Streaming = stream
 }
 
-func (o *OllamaAPI) SendMessageTo(ctx context.Context, msg string) (interface{}, error) {
+func (o *OllamaAPI) WithContext(prompt, context string) {
+	o.Prompt = FormatPrompt(prompt, context)
+}
+
+func (o *OllamaAPI) SendMessageTo(ctx context.Context) (interface{}, error) {
 	apiUrl := o.Url + "generate"
-	body := fmt.Sprintf(`{"model": %s, "prompt": %s, "stream": %t}`, o.Model, msg, o.Streaming)
-	userData := []byte(body)
+	payload := map[string]interface{}{
+		"model":  o.Model,
+		"prompt": o.Prompt,
+		"stream": o.Streaming,
+	}
+	userData, err := json.Marshal(payload)
+	if err != nil {
+		return nil, fmt.Errorf("error marshaling json: %v", err)
+	}
 	var resp OllamaResponse
 
-	err := HttpCaller(POST, apiUrl, userData, &resp)
+	err = HttpCaller(POST, apiUrl, userData, &resp)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -71,14 +89,32 @@ func (o *OllamaAPI) SendMessageTo(ctx context.Context, msg string) (interface{},
 
 func (o *OllamaAPI) GenerateEmbedding(ctx context.Context, content string) (interface{}, error) {
 	apiUrl := o.Url + "embeddings"
-	body := fmt.Sprintf(`{"model": "%s", "prompt": "%s"}`, o.Embedder, strings.Trim(content, "\n"))
-	userData := []byte(body)
+	payload := map[string]interface{}{
+		"model":  o.Embedder,
+		"prompt": strings.Trim(content, "\n"),
+	}
+
+	userData, err := json.Marshal(payload)
+	if err != nil {
+		return nil, fmt.Errorf("error marshaling json: %v", err)
+	}
 	var resp OllamaEmbeddingResponse
 
-	err := HttpCaller(POST, apiUrl, userData, &resp)
+	err = HttpCaller(POST, apiUrl, userData, &resp)
 	if err != nil {
 		log.Panic(err)
 	}
 
 	return resp, nil
+}
+
+func FormatPrompt(prompt, context string) string {
+	fprompt := fmt.Sprintf(`
+    You are a helpfull assistant,
+    If There is no context just answer whith what you know.
+    Use the following context if not blank: %s
+    Answer the following:
+    PROMPT: %s
+  `, prompt, context)
+	return fprompt
 }
