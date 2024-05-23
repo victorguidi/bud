@@ -1,3 +1,18 @@
-This is Victor. He 25 Years old.
-He works as a software Engineer.
-He is the boyfriend of Carol.
+Victor Guidi, 
+23 March 2024
+
+I am writing to express my interest in the Software Developer position. With a robust background in software engineering, particularly in back-end systems development within Linux environments and front-end web applications, I have experience in projects utilizing languages such as Python, C++, JavaScript/TypeScript, Golang, and C#. Additionally, I am proficient in managing Linux server deployment and maintenance, utilizing tools such as Nginx for proxying, Docker for deployment, and Ansible for automation. I am eager to contribute to your team and bring innovative solutions to your projects.
+
+Some notable achievements in my career have been:
+1. Leading the development of a fully autonomous inspection system utilizing a quadruped robot, employing Python and C++ programming languages.
+2. Architecting an API capable of handling approximately 40,000 requests per hour, implementing concurrency patterns with Golang.
+3. Leading the creation of a web application aimed at assisting the engineering team in validating supplier proposals. This predominantly involved utilizing Python for the back-end, integrating with a Large Language Model to enhance summarization and interpretation of supplied documents, and employing React for the front-end.
+
+As I pursue a new chapter in my career, I am excited about the prospect of joining your team. I am confident that my technical proficiency, problem-solving skills, and commitment to continuous learning make me a strong candidate for the role.
+
+I sincerely hope we can connect further to discuss how my background and skills align with all your needs.
+
+Thank you for considering my application. I look forward to the possibility of working together and contributing to the success of the projects.
+Best regards,
+
+Victor Guidi

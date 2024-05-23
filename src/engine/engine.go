@@ -18,7 +18,9 @@ var (
 	dir       = filepath.Join("testfiles")
 )
 
-type Engine struct{}
+type Engine struct {
+	Question string
+}
 
 func New() *Engine {
 	return &Engine{}
@@ -45,7 +47,7 @@ func (e *Engine) ProcessFiles() {
 	}
 
 	// emb, err := ollamaAPI.GenerateEmbedding(context.Background(), string([]byte("Where is the Capital of New Zealand")))
-	emb, err := ollamaAPI.GenerateEmbedding(context.Background(), string([]byte("Who is Victors girlfriend?")))
+	emb, err := ollamaAPI.GenerateEmbedding(context.Background(), string([]byte(e.Question)))
 	if err != nil {
 		log.Panic(err)
 	}
@@ -55,8 +57,8 @@ func (e *Engine) ProcessFiles() {
 		log.Panic(err)
 	}
 
-	log.Println("VECTOR OUTPUT:\n", vectorTable.Text, "====================================")
-	ollamaAPI.WithContext("Who is Victors girlfriend?", vectorTable.Text)
+	log.Printf("\n================\nVECTOR OUTPUT: %s\n================\n", vectorTable.Text)
+	ollamaAPI.WithContext(e.Question, vectorTable.Text)
 	call, err := ollamaAPI.SendMessageTo(context.Background())
 	if err != nil {
 		log.Panic(err)

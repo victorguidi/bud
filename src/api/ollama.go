@@ -8,6 +8,10 @@ import (
 	"strings"
 )
 
+// NOTE: all-minilm = 384 dimensions
+// NOTE: mxbai-embed-large = 1024 demensions
+// NOTE: nomic-embed-text = 768
+
 var DEFAULTFORMATER = map[string]any{"prompt": ""}
 
 type OllamaAPI struct {

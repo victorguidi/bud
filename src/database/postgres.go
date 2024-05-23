@@ -14,9 +14,6 @@ import (
 
 var connStr string
 
-// NOTE: all-minilm = 384 dimensions
-// NOTE: mxbai-embed-large = 1024 demensions
-
 func init() {
 	err := godotenv.Load()
 	if err != nil {
@@ -34,7 +31,6 @@ type PostgresVectorDB struct {
 }
 
 func New() *PostgresVectorDB {
-	log.Println(connStr)
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		log.Panic(err)
@@ -86,14 +82,15 @@ func (p *PostgresVectorDB) Retrieve(embeddings []float32) (*VectorsTable, error)
 
 	for rows.Next() {
 		var vTable VectorsTable
-		var similarity float32
-		if err := rows.Scan(&vTable.Id, &vTable.DocName, &vTable.Text, &vTable.Vector, &vTable.Created_at, &similarity); err != nil {
+		var cosineDistance float32
+		if err := rows.Scan(&vTable.Id, &vTable.DocName, &vTable.Text, &vTable.Vector, &vTable.Created_at, &cosineDistance); err != nil {
 			return nil, err
 		}
 
-		log.Printf("\n================\nSIMILARITY: %f\n================\n", similarity)
+		log.Printf("\n================\nCLOSEST VECTOR: %s\n================\n", vTable.Text)
 
-		if similarity < 0.5 {
+		log.Printf("\n================\nCOSINE DISTANCE: %f\n================\n", cosineDistance)
+		if cosineDistance <= 0.5 {
 			vectorTable = append(vectorTable, vTable)
 		}
 	}
