@@ -8,7 +8,6 @@ import (
 
 	"gitlab.com/bud.git/src/api"
 	"gitlab.com/bud.git/src/database"
-	"gitlab.com/bud.git/src/utils"
 )
 
 var dir = filepath.Join("testfiles")
@@ -39,8 +38,8 @@ func (e *Engine) ProcessFiles() {
 		log.Panic(err)
 	}
 
-	txtHandler := utils.NewTxtHandler()
-	o := api.New()
+	// txtHandler := utils.NewTxtHandler()
+	o := api.NewOllamaAPI()
 	p := database.New()
 	err = p.Initialize()
 	if err != nil {
@@ -48,22 +47,33 @@ func (e *Engine) ProcessFiles() {
 	}
 
 	for _, file := range files {
+		log.Println(file)
+		//
+		// 	fileBytes, err := txtHandler.Open(filepath.Join(dir, file.Name()))
+		// 	if err != nil {
+		// 		log.Panic(err)
+		// 	}
+		//
+		// 	e, err := o.GenerateEmbedding(context.Background(), string(fileBytes))
+		// 	if err != nil {
+		// 		log.Panic(err)
+		// 	}
+		//
+		// 	err = p.Save(file.Name(), string(fileBytes), e)
+		// 	if err != nil {
+		// 		log.Panic(err)
+		// 	}
+		//
+	}
 
-		fileBytes, err := txtHandler.Open(filepath.Join(dir, file.Name()))
-		if err != nil {
-			log.Panic(err)
-		}
+	emb, err := o.GenerateEmbedding(context.Background(), string([]byte("Test")))
+	if err != nil {
+		log.Panic(err)
+	}
 
-		e, err := o.GenerateEmbedding(context.Background(), string(fileBytes))
-		if err != nil {
-			log.Panic(err)
-		}
-
-		err = p.Save(e)
-		if err != nil {
-			log.Panic(err)
-		}
-
+	err = p.Retrieve(emb)
+	if err != nil {
+		log.Panic(err)
 	}
 }
 

@@ -28,7 +28,7 @@ type OllamaEmbeddingResponse struct {
 	Embeggind []float64 `json:"embedding"`
 }
 
-func New() *OllamaAPI {
+func NewOllamaAPI() *OllamaAPI {
 	return &OllamaAPI{
 		Url:   "http://localhost:11434/api/",
 		Model: "llama2",
@@ -72,7 +72,6 @@ func (o *OllamaAPI) SendMessageTo(ctx context.Context, msg string) (interface{},
 func (o *OllamaAPI) GenerateEmbedding(ctx context.Context, content string) (interface{}, error) {
 	apiUrl := o.Url + "embeddings"
 	body := fmt.Sprintf(`{"model": "%s", "prompt": "%s"}`, o.Embedder, strings.Trim(content, "\n"))
-	log.Println(body)
 	userData := []byte(body)
 	var resp OllamaEmbeddingResponse
 
