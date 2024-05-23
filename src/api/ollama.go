@@ -24,7 +24,7 @@ type OllamaResponse struct {
 }
 
 type OllamaEmbeddingResponse struct {
-	Embeggind string `json:"embedding"`
+	Embeggind []float64 `json:"embedding"`
 }
 
 func New() *OllamaAPI {
