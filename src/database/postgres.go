@@ -9,6 +9,7 @@ import (
 
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
+	"gitlab.com/bud.git/src/utils"
 )
 
 var connStr string
@@ -52,7 +53,7 @@ func (p *PostgresVectorDB) Initialize() error {
 	return nil
 }
 
-func (p *PostgresVectorDB) Save(docName, content string, embeddings interface{}) error {
+func (p *PostgresVectorDB) Save(docName, content string, embeddings []float64) error {
 	embeddingStr := strings.Trim(strings.Join(strings.Fields(fmt.Sprint(embeddings)), ","), "{}")
 	query := `INSERT INTO embeddings (docName, text, embeddings)
     VALUES ($1, $2, $3::vector)
@@ -68,28 +69,25 @@ func (p *PostgresVectorDB) Save(docName, content string, embeddings interface{})
 	return nil
 }
 
-func (p *PostgresVectorDB) Retrieve(embeddings interface{}) (*VectorsTable, error) {
-	// Format embeddings as a string for the query
+func (p *PostgresVectorDB) Retrieve(embeddings []float64) (*VectorsTable, error) {
 	embeddingStr := strings.Trim(strings.Join(strings.Fields(fmt.Sprint(embeddings)), ","), "{}")
-
-	// Correct query formation
-	query := fmt.Sprintf("SELECT * FROM embeddings ORDER BY embeddings <-> '%s'::vector LIMIT 2;", embeddingStr)
-
-	// Execute query
+	query := fmt.Sprintf("SELECT * FROM embeddings ORDER BY embeddings <-> '%s'::vector LIMIT 5;", embeddingStr)
 	rows, err := p.db.Query(query)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var vectorTable VectorsTable
+	var vectorTable []VectorsTable
 
 	// Process the result set
 	for rows.Next() {
 		// Scan each row into your variables
-		if err := rows.Scan(&vectorTable.Id, &vectorTable.DocName, &vectorTable.Text, &vectorTable.Vector, &vectorTable.Created_at); err != nil {
+		var vTable VectorsTable
+		if err := rows.Scan(&vTable.Id, &vTable.DocName, &vTable.Text, &vTable.Vector, &vTable.Created_at); err != nil {
 			return nil, err
 		}
+		vectorTable = append(vectorTable, vTable)
 	}
 
 	// Check for errors from iterating over rows
@@ -97,5 +95,19 @@ func (p *PostgresVectorDB) Retrieve(embeddings interface{}) (*VectorsTable, erro
 		return nil, err
 	}
 
-	return &vectorTable, nil
+	var finalVector VectorsTable
+	currentSimilarity := 0.0
+	for _, vector := range vectorTable {
+		floatSlice := make([]float64, len(vector.Vector))
+		for i, v := range vector.Vector {
+			floatSlice[i] = float64(v)
+		}
+		newSimilarity := utils.CosSimilarity(embeddings, floatSlice)
+		if newSimilarity > currentSimilarity {
+			currentSimilarity = newSimilarity
+			finalVector = vector
+		}
+	}
+
+	return &finalVector, nil
 }

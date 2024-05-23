@@ -49,13 +49,17 @@ func (e *Engine) ProcessFiles() {
 		log.Panic(err)
 	}
 
-	vectorTable, err := vectorDB.Retrieve(emb)
+	vectorTable, err := vectorDB.Retrieve(emb.Embedding)
 	if err != nil {
 		log.Panic(err)
 	}
 
-	log.Println("VECTOR OUTPUT:\n", vectorTable.Text, "====================================")
-	ollamaAPI.WithContext("Where is the Capital of New Zealand", vectorTable.Text)
+	// log.Println("VECTOR OUTPUT:\n", vectorTable.Text, "====================================")
+	if vectorTable != nil {
+		ollamaAPI.WithContext("Where is the Capital of New Zealand", vectorTable.Text)
+	} else {
+		ollamaAPI.WithContext("Where is the Capital of New Zealand", "")
+	}
 	call, err := ollamaAPI.SendMessageTo(context.Background())
 	if err != nil {
 		log.Panic(err)
@@ -116,7 +120,7 @@ func (e *Engine) EmbedFiles() error {
 			log.Panic(err)
 		}
 
-		err = vectorDB.Save(file.Name(), string(fileBytes), e)
+		err = vectorDB.Save(file.Name(), string(fileBytes), e.Embedding)
 		if err != nil {
 			log.Panic(err)
 		}

@@ -7,9 +7,9 @@ type IVectorDB interface {
 }
 
 type VectorsTable struct {
-	Vector     string
 	DocName    string
 	Text       string
 	Created_at string
+	Vector     []uint8
 	Id         int
 }

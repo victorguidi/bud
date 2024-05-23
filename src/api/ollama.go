@@ -32,7 +32,7 @@ type OllamaResponse struct {
 }
 
 type OllamaEmbeddingResponse struct {
-	Embeggind []float64 `json:"embedding"`
+	Embedding []float64 `json:"embedding"`
 }
 
 func NewOllamaAPI() *OllamaAPI {
@@ -94,7 +94,7 @@ func (o *OllamaAPI) SendMessageTo(ctx context.Context) (*OllamaResponse, error) 
 	return &resp, nil
 }
 
-func (o *OllamaAPI) GenerateEmbedding(ctx context.Context, content string) (interface{}, error) {
+func (o *OllamaAPI) GenerateEmbedding(ctx context.Context, content string) (*OllamaEmbeddingResponse, error) {
 	apiUrl := o.Url + "embeddings"
 	payload := map[string]interface{}{
 		"model":  o.Embedder,
@@ -112,7 +112,7 @@ func (o *OllamaAPI) GenerateEmbedding(ctx context.Context, content string) (inte
 		log.Panic(err)
 	}
 
-	return resp, nil
+	return &resp, nil
 }
 
 func FormatPrompt(prompt, context string) string {
