@@ -70,23 +70,33 @@ func (e *Engine) EmbedFiles() error {
 	}
 
 	var handler utils.IFiles
+	var fileName string
 	for _, file := range files {
 		switch filepath.Ext(file.Name()) {
 		case ".pdf":
 			pdf := utils.NewPDFHandler()
-			pdf.ConvertToTxt(dir, file.Name())
+			newName, err := pdf.ConvertToTxt(dir, file.Name())
+			if err != nil {
+				return err
+			}
+			fileName = newName
 			handler = pdf
 		case ".docx":
 			docx := utils.NewDocxHandler()
-			docx.ConvertToTxt(dir, file.Name())
+			newName, err := docx.ConvertToTxt(dir, file.Name())
+			if err != nil {
+				return err
+			}
+			fileName = newName
 			handler = docx
 		case ".txt":
+			fileName = file.Name()
 			handler = utils.NewTxtHandler()
 		default:
 			return errors.New("FILE NOT RECOGNIZED")
 		}
 
-		fileBytes, err := handler.Open(filepath.Join(dir, file.Name()))
+		fileBytes, err := handler.Open(filepath.Join(dir, fileName))
 		if err != nil {
 			log.Panic(err)
 		}
