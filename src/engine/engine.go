@@ -14,6 +14,8 @@ func New() *Engine {
 	return &Engine{}
 }
 
+// ProcessFiles read files (.pdf, .txt, .docx), generate Embeddings and send to a Postgres Vector Instance.
+// Once Asked the Model will always have the files here as knowledge too.
 func (e *Engine) ProcessFiles() {
 	_, err := os.Stat(dir)
 	if err != nil {

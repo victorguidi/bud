@@ -1,11 +1,9 @@
 package api
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
-	"net/http"
+	"log"
 )
 
 type OllamaAPI struct {
@@ -17,6 +15,16 @@ type OllamaAPI struct {
 type Extensions struct {
 	Embedder  string
 	Streaming bool
+}
+
+type OllamaResponse struct {
+	Model      string `json:"model"`
+	Created_at string `json:"created_at"`
+	Response   string `json:"response"`
+}
+
+type OllamaEmbeddingResponse struct {
+	Embeggind string `json:"embedding"`
 }
 
 func New() *OllamaAPI {
@@ -47,37 +55,29 @@ func (o *OllamaAPI) WithStreaming(stream bool) {
 }
 
 func (o *OllamaAPI) SendMessageTo(ctx context.Context, msg string) (interface{}, error) {
-	apiUrl := "http://localhost:11434/api/generate"
-	userData := []byte(`{"model":"gemma","prompt":"` + msg + `", "stream":false}`)
+	apiUrl := o.Url + "generate"
+	body := fmt.Sprintf(`{"model": %s, "prompt": %s, "stream": %t}`, o.Model, msg, o.Streaming)
+	userData := []byte(body)
+	var resp OllamaResponse
 
-	// create new http request
-	request, err := http.NewRequest("POST", apiUrl, bytes.NewBuffer(userData))
-	request.Header.Set("Content-Type", "application/json; charset=utf-8")
+	err := HttpCaller(POST, apiUrl, userData, &resp)
 	if err != nil {
-		return nil, err
+		log.Panic(err)
 	}
 
-	// send the request
-	client := &http.Client{}
-	response, err := client.Do(request)
+	return resp, nil
+}
+
+func (o *OllamaAPI) GenerateEmbedding(ctx context.Context, content string) (interface{}, error) {
+	apiUrl := o.Url + "embeddings"
+	body := fmt.Sprintf(`{"model": %s, "prompt": %s}`, o.Embedder, content)
+	userData := []byte(body)
+	var resp OllamaEmbeddingResponse
+
+	err := HttpCaller(POST, apiUrl, userData, &resp)
 	if err != nil {
-		return nil, err
+		log.Panic(err)
 	}
 
-	type Response struct {
-		Model      string `json:"model"`
-		Created_at string `json:"created_at"`
-		Response   string `json:"response"`
-	}
-	var resp Response
-	err = json.NewDecoder(response.Body).Decode(&resp)
-	if err != nil {
-		return nil, err
-	}
-	// I need to encode the response in the resp
-	fmt.Println("Status: ", response.Status)
-
-	// clean up memory after execution
-	defer response.Body.Close()
 	return resp, nil
 }
