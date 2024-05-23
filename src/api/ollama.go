@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 )
 
 type OllamaAPI struct {
@@ -70,7 +71,8 @@ func (o *OllamaAPI) SendMessageTo(ctx context.Context, msg string) (interface{},
 
 func (o *OllamaAPI) GenerateEmbedding(ctx context.Context, content string) (interface{}, error) {
 	apiUrl := o.Url + "embeddings"
-	body := fmt.Sprintf(`{"model": %s, "prompt": %s}`, o.Embedder, content)
+	body := fmt.Sprintf(`{"model": "%s", "prompt": "%s"}`, o.Embedder, strings.Trim(content, "\n"))
+	log.Println(body)
 	userData := []byte(body)
 	var resp OllamaEmbeddingResponse
 

@@ -1,9 +1,14 @@
 package engine
 
 import (
+	"context"
 	"log"
 	"os"
 	"path/filepath"
+
+	"gitlab.com/bud.git/src/api"
+	"gitlab.com/bud.git/src/database"
+	"gitlab.com/bud.git/src/utils"
 )
 
 var dir = filepath.Join("testfiles")
@@ -33,8 +38,32 @@ func (e *Engine) ProcessFiles() {
 	if err != nil {
 		log.Panic(err)
 	}
+
+	txtHandler := utils.NewTxtHandler()
+	o := api.New()
+	p := database.New()
+	err = p.Initialize()
+	if err != nil {
+		log.Panic(err)
+	}
+
 	for _, file := range files {
-		log.Println(file)
+
+		fileBytes, err := txtHandler.Open(filepath.Join(dir, file.Name()))
+		if err != nil {
+			log.Panic(err)
+		}
+
+		e, err := o.GenerateEmbedding(context.Background(), string(fileBytes))
+		if err != nil {
+			log.Panic(err)
+		}
+
+		err = p.Save(e)
+		if err != nil {
+			log.Panic(err)
+		}
+
 	}
 }
 

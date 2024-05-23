@@ -7,27 +7,35 @@ import (
 	"os"
 	"strings"
 
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
 
-var (
-	DBUSER     = os.Getenv("DBUSER")
-	DBPASSWORD = os.Getenv("DBPASSWORD")
-	DBHOST     = os.Getenv("DBHOST")
-	DBPORT     = os.Getenv("DBPORT")
-	connStr    = fmt.Sprintf("user=%s dbname=budvecs password=%s host=%s port=%s", DBUSER, DBPASSWORD, DBHOST, DBPORT)
-)
+var connStr string
+
+func init() {
+	err := godotenv.Load()
+	if err != nil {
+		panic(err)
+	}
+	connStr = fmt.Sprintf("user=%s dbname=budvecs password=%s host=%s port=%s sslmode=disable",
+		os.Getenv("DBUSER"),
+		os.Getenv("DBPASSWORD"),
+		os.Getenv("DBHOST"),
+		os.Getenv("DBPORT"))
+}
 
 type PostgresVectorDB struct {
 	db *sql.DB
 }
 
+// FIX: Vector DB in postgres not working
 func New() *PostgresVectorDB {
+	log.Println(connStr)
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		log.Panic(err)
 	}
-	defer db.Close()
 
 	return &PostgresVectorDB{
 		db: db,
@@ -36,16 +44,14 @@ func New() *PostgresVectorDB {
 
 // TODO: This needs to be dynamic for each Model used, since each has a certain ammount of dimmensions
 func (p *PostgresVectorDB) Initialize() error {
-	rows, err := p.db.Query("CREATE TABLE embeddings (id SERIAL PRIMARY KEY, vector pgvector(16));")
+	_, err := p.db.Exec("CREATE TABLE IF NOT EXISTS embeddings (id SERIAL PRIMARY KEY, embeddings vector(16));")
 	if err != nil {
 		return err
 	}
-	defer rows.Close()
 	return nil
 }
 
-func (p *PostgresVectorDB) Save(embeddings []float64) error {
-	// Execute a query
+func (p *PostgresVectorDB) Save(embeddings interface{}) error {
 	query := fmt.Sprintf("INSERT INTO embeddings (vector) VALUES('%s')", strings.Join(strings.Fields(fmt.Sprint(embeddings)), ","))
 	log.Println(query)
 	rows, err := p.db.Query(query)

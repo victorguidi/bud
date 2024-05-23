@@ -40,12 +40,13 @@ func HttpCaller[T any](method HTTPMethod, apiUrl string, userData []byte, respon
 		return err
 	}
 
+	// I need to encode the response in the resp
+	fmt.Println("Status: ", response.Status)
+
 	err = json.NewDecoder(response.Body).Decode(&responseBody)
 	if err != nil {
 		return err
 	}
-	// I need to encode the response in the resp
-	fmt.Println("Status: ", response.Status)
 
 	// clean up memory after execution
 	defer response.Body.Close()
