@@ -15,7 +15,7 @@ func NewAudioEngine() *AudioEngine {
 func (a *AudioEngine) Speak(output string) error {
 	// spd-say "Arch Linux is the best"
 	log.Println(output)
-	cmd := exec.Command("spd-say", "--wait", output)
+	cmd := exec.Command("spd-say", "-r", "100", "--wait", output)
 	if err := cmd.Run(); err != nil {
 		log.Printf("Error on convert pdf to txt: %v", err)
 		return err

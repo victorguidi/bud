@@ -44,7 +44,8 @@ func (e *Engine) ProcessFiles() {
 		panic(err)
 	}
 
-	emb, err := ollamaAPI.GenerateEmbedding(context.Background(), string([]byte("Where is the Capital of New Zealand")))
+	// emb, err := ollamaAPI.GenerateEmbedding(context.Background(), string([]byte("Where is the Capital of New Zealand")))
+	emb, err := ollamaAPI.GenerateEmbedding(context.Background(), string([]byte("Who is Victors girlfriend?")))
 	if err != nil {
 		log.Panic(err)
 	}
@@ -54,12 +55,8 @@ func (e *Engine) ProcessFiles() {
 		log.Panic(err)
 	}
 
-	// log.Println("VECTOR OUTPUT:\n", vectorTable.Text, "====================================")
-	if vectorTable != nil {
-		ollamaAPI.WithContext("Where is the Capital of New Zealand", vectorTable.Text)
-	} else {
-		ollamaAPI.WithContext("Where is the Capital of New Zealand", "")
-	}
+	log.Println("VECTOR OUTPUT:\n", vectorTable.Text, "====================================")
+	ollamaAPI.WithContext("Who is Victors girlfriend?", vectorTable.Text)
 	call, err := ollamaAPI.SendMessageTo(context.Background())
 	if err != nil {
 		log.Panic(err)

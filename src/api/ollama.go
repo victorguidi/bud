@@ -32,7 +32,7 @@ type OllamaResponse struct {
 }
 
 type OllamaEmbeddingResponse struct {
-	Embedding []float64 `json:"embedding"`
+	Embedding []float32 `json:"embedding"`
 }
 
 func NewOllamaAPI() *OllamaAPI {
@@ -41,9 +41,9 @@ func NewOllamaAPI() *OllamaAPI {
 		Model: "llama2",
 		Extensions: Extensions{
 			Streaming: false,
-			Embedder:  "all-minilm",
+			Embedder:  "mxbai-embed-large",
 			Prompt:    FormatPrompt("", ""),
-			Tokens:    250,
+			Tokens:    1024,
 		},
 	}
 }

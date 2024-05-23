@@ -1,5 +1,7 @@
 package database
 
+import "github.com/pgvector/pgvector-go"
+
 type IVectorDB interface {
 	Initialize() error
 	Save(embeddings interface{}) error
@@ -10,6 +12,6 @@ type VectorsTable struct {
 	DocName    string
 	Text       string
 	Created_at string
-	Vector     []uint8
+	Vector     pgvector.Vector
 	Id         int
 }
