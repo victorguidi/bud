@@ -29,7 +29,6 @@ type PostgresVectorDB struct {
 	db *sql.DB
 }
 
-// FIX: Vector DB in postgres not working
 func New() *PostgresVectorDB {
 	log.Println(connStr)
 	db, err := sql.Open("postgres", connStr)
@@ -52,8 +51,10 @@ func (p *PostgresVectorDB) Initialize() error {
 }
 
 func (p *PostgresVectorDB) Save(docName, content string, embeddings interface{}) error {
-	query := fmt.Sprintf("INSERT INTO embeddings (docName, text, embeddings) VALUES('%s', '%s', '%s'::vector)", docName, content, strings.Trim(strings.Join(strings.Fields(fmt.Sprint(embeddings)), ","), "{}"))
-	_, err := p.db.Query(query)
+	embeddingStr := strings.Trim(strings.Join(strings.Fields(fmt.Sprint(embeddings)), ","), "{}")
+	query := "INSERT INTO embeddings (docName, text, embeddings) VALUES($1, $2, $3::vector)"
+
+	_, err := p.db.Exec(query, docName, content, embeddingStr)
 	if err != nil {
 		return err
 	}
@@ -65,7 +66,7 @@ func (p *PostgresVectorDB) Retrieve(embeddings interface{}) (*VectorsTable, erro
 	embeddingStr := strings.Trim(strings.Join(strings.Fields(fmt.Sprint(embeddings)), ","), "{}")
 
 	// Correct query formation
-	query := fmt.Sprintf("SELECT * FROM embeddings ORDER BY embeddings <-> '%s'::vector LIMIT 5;", embeddingStr)
+	query := fmt.Sprintf("SELECT * FROM embeddings ORDER BY embeddings <-> '%s'::vector LIMIT 2;", embeddingStr)
 
 	// Execute query
 	rows, err := p.db.Query(query)

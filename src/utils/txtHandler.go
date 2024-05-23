@@ -5,9 +5,7 @@ import (
 	"os"
 )
 
-type TxtHandler struct {
-	IFiles
-}
+type TxtHandler struct{}
 
 func NewTxtHandler() *TxtHandler {
 	return &TxtHandler{}

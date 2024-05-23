@@ -1,5 +1,5 @@
 package utils
 
 type IFiles interface {
-	Open(path string) error
+	Open(path string) ([]byte, error)
 }
