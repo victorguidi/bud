@@ -43,7 +43,9 @@ func New() *PostgresVectorDB {
 
 // TODO: This needs to be dynamic for each Model used, since each has a certain ammount of dimmensions
 func (p *PostgresVectorDB) Initialize() error {
-	_, err := p.db.Exec("CREATE TABLE IF NOT EXISTS embeddings (id SERIAL PRIMARY KEY, docName varchar(255), text TEXT, embeddings vector(384), created_at TIMESTAMP DEFAULT now());")
+	_, err := p.db.Exec(`
+    CREATE TABLE IF NOT EXISTS embeddings (id SERIAL PRIMARY KEY, docName varchar(255) UNIQUE, text TEXT, embeddings vector(384), created_at TIMESTAMP DEFAULT now());
+    `)
 	if err != nil {
 		return err
 	}
@@ -52,7 +54,12 @@ func (p *PostgresVectorDB) Initialize() error {
 
 func (p *PostgresVectorDB) Save(docName, content string, embeddings interface{}) error {
 	embeddingStr := strings.Trim(strings.Join(strings.Fields(fmt.Sprint(embeddings)), ","), "{}")
-	query := "INSERT INTO embeddings (docName, text, embeddings) VALUES($1, $2, $3::vector)"
+	query := `INSERT INTO embeddings (docName, text, embeddings)
+    VALUES ($1, $2, $3::vector)
+    ON CONFLICT (docName) 
+    DO UPDATE SET 
+        text = EXCLUDED.text, 
+        embeddings = EXCLUDED.embeddings;`
 
 	_, err := p.db.Exec(query, docName, content, embeddingStr)
 	if err != nil {

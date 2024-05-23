@@ -1,1 +1,3 @@
-Victor is 25 Years old. He works as a software Engineer. He is the boyfriend of Carol.
+This is Victor. He 25 Years old.
+He works as a software Engineer.
+He is the boyfriend of Carol.

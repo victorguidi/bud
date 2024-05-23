@@ -44,7 +44,7 @@ func (e *Engine) ProcessFiles() {
 		panic(err)
 	}
 
-	emb, err := ollamaAPI.GenerateEmbedding(context.Background(), string([]byte("Victor")))
+	emb, err := ollamaAPI.GenerateEmbedding(context.Background(), string([]byte("Where is the Capital of New Zealand")))
 	if err != nil {
 		log.Panic(err)
 	}
@@ -54,13 +54,18 @@ func (e *Engine) ProcessFiles() {
 		log.Panic(err)
 	}
 
-	ollamaAPI.WithContext("What does the paper say about Bitcoin?", vectorTable.Text)
+	log.Println("VECTOR OUTPUT:\n", vectorTable.Text, "====================================")
+	ollamaAPI.WithContext("Where is the Capital of New Zealand", vectorTable.Text)
 	call, err := ollamaAPI.SendMessageTo(context.Background())
 	if err != nil {
 		log.Panic(err)
 	}
 
-	log.Println(call)
+	audioEngine := NewAudioEngine()
+	err = audioEngine.Speak(call.Response)
+	if err != nil {
+		log.Panic(err)
+	}
 }
 
 func (e *Engine) EmbedFiles() error {

@@ -20,6 +20,7 @@ type Extensions struct {
 	Embedder  string
 	Prompt    string
 	Streaming bool
+	Tokens    int
 }
 
 type PromptFormater func(map[string]any) string
@@ -42,6 +43,7 @@ func NewOllamaAPI() *OllamaAPI {
 			Streaming: false,
 			Embedder:  "all-minilm",
 			Prompt:    FormatPrompt("", ""),
+			Tokens:    250,
 		},
 	}
 }
@@ -66,12 +68,17 @@ func (o *OllamaAPI) WithContext(prompt, context string) {
 	o.Prompt = FormatPrompt(prompt, context)
 }
 
-func (o *OllamaAPI) SendMessageTo(ctx context.Context) (interface{}, error) {
+func (o *OllamaAPI) WithTokens(tokens int) {
+	o.Tokens = tokens
+}
+
+func (o *OllamaAPI) SendMessageTo(ctx context.Context) (*OllamaResponse, error) {
 	apiUrl := o.Url + "generate"
 	payload := map[string]interface{}{
-		"model":  o.Model,
-		"prompt": o.Prompt,
-		"stream": o.Streaming,
+		"model":   o.Model,
+		"prompt":  o.Prompt,
+		"stream":  o.Streaming,
+		"options": map[string]interface{}{"num_predict": o.Tokens},
 	}
 	userData, err := json.Marshal(payload)
 	if err != nil {
@@ -84,7 +91,7 @@ func (o *OllamaAPI) SendMessageTo(ctx context.Context) (interface{}, error) {
 		log.Panic(err)
 	}
 
-	return resp, nil
+	return &resp, nil
 }
 
 func (o *OllamaAPI) GenerateEmbedding(ctx context.Context, content string) (interface{}, error) {
