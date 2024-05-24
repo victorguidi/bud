@@ -12,7 +12,10 @@ import (
 // NOTE: mxbai-embed-large = 1024 demensions
 // NOTE: nomic-embed-text = 768
 
-var DEFAULTFORMATER = map[string]any{"prompt": ""}
+const (
+	DEFAULTPROMPT    = "You are a helpfull assistant. Please answer the question provided in the PROMPT."
+	DEFAULTRAGPROMPT = "You are a helpfull assistant that provides answer based on the knowledge given to you.If There is no context, answer: I don't know, maybe I need more context."
+)
 
 type OllamaAPI struct {
 	Url   string
@@ -46,7 +49,7 @@ func NewOllamaAPI() *OllamaAPI {
 		Extensions: Extensions{
 			Streaming: false,
 			Embedder:  "mxbai-embed-large",
-			Prompt:    FormatPrompt("", ""),
+			Prompt:    "",
 			Tokens:    1024,
 		},
 	}
@@ -66,10 +69,6 @@ func (o *OllamaAPI) WithEmbedder(embedderName string) {
 
 func (o *OllamaAPI) WithStreaming(stream bool) {
 	o.Streaming = stream
-}
-
-func (o *OllamaAPI) WithContext(prompt, context string) {
-	o.Prompt = FormatPrompt(prompt, context)
 }
 
 func (o *OllamaAPI) WithTokens(tokens int) {
@@ -119,10 +118,30 @@ func (o *OllamaAPI) GenerateEmbedding(ctx context.Context, content string) (*Oll
 	return &resp, nil
 }
 
-func FormatPrompt(prompt, context string) string {
+func (o *OllamaAPI) PromptFormater(prompt string, values interface{}) {
+	var p strings.Builder
+	p.WriteString(prompt)
+	if values, ok := values.(map[string]string); ok {
+		for key, value := range values {
+			p.WriteString(fmt.Sprintf("%s:%s", key, value))
+		}
+	}
+	o.Prompt = p.String()
+}
+
+func FormatPromptChat(prompt, context string) string {
 	fprompt := fmt.Sprintf(`
-    You are a helpfull assistant,
-    If There is no context just answer whith what you know.
+    You are a helpfull assistant. Please answer the question provided in the PROMPT.
+    PROMPT: %s
+  `, prompt, context)
+	return fprompt
+}
+
+func FormatPromptRag(prompt, context string) string {
+	fprompt := fmt.Sprintf(`
+    You are a helpfull assistant that provides answer based on the knowledge given to you.
+    If There is no context, answer: "I don't know, maybe I need more context".
+
     Use the following context if not blank: %s
     Answer the following:
     PROMPT: %s

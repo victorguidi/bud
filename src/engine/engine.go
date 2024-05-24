@@ -13,6 +13,8 @@ import (
 	"gitlab.com/bud.git/src/utils"
 )
 
+var Workers = make(map[string]*Trigger)
+
 type Engine struct {
 	EngineCommunicationPipe
 	EngineFunctions
@@ -47,7 +49,7 @@ type DirTrigger struct {
 	Dir string
 }
 
-type BaseTrigger struct {
+type AskTrigger struct {
 	Question string
 }
 
@@ -89,6 +91,7 @@ func (e *Engine) Run() {
 			switch cmd.Trigger {
 
 			case DIR.String():
+				Workers[DIR.String()] = &cmd
 				if content, ok := cmd.Content.(DirTrigger); ok {
 					newDir := false
 					if content.Dir != "" {
@@ -117,8 +120,13 @@ func (e *Engine) Run() {
 				}
 
 			case ASKBASE.String():
-				if question, ok := cmd.Content.(BaseTrigger); ok {
+				if question, ok := cmd.Content.(AskTrigger); ok {
 					go e.AskBase(question.Question)
+				}
+
+			case ASK.String():
+				if question, ok := cmd.Content.(AskTrigger); ok {
+					go e.AskLLM(question.Question)
 				}
 
 			default:
@@ -133,10 +141,13 @@ func (e *Engine) Run() {
 
 func (e *Engine) Config() {}
 
+// SECTION: DIR Session
+// Process Dirs is a loop that runs until a quit signal is sent
 func (e *Engine) ProcessDirs(quit chan bool, newDir bool) {
 	for {
 		select {
 		case <-quit:
+			log.Println("SERVICE DIRS IS DOWN")
 			return
 		default:
 			time.Sleep(time.Second * 30)
@@ -149,33 +160,8 @@ func (e *Engine) ProcessDirs(quit chan bool, newDir bool) {
 	}
 }
 
-func (e *Engine) AskBase(question string) error {
-	emb, err := e.GenerateEmbedding(context.Background(), string([]byte(question)))
-	if err != nil {
-		return err
-	}
-
-	vectorTable, err := e.Retrieve(emb.Embedding)
-	if err != nil {
-		return err
-	}
-
-	log.Printf("\n================\nVECTOR OUTPUT: %s\n================\n", vectorTable.Text)
-	e.WithContext(question, vectorTable.Text)
-	log.Println(question)
-	call, err := e.SendMessageTo(context.Background())
-	if err != nil {
-		return err
-	}
-
-	audioEngine := NewAudioEngine()
-	err = audioEngine.Speak(call.Response)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
+// EmbedFiles will look at dirs that are stored at the SQLite database, if the dir is new it will embed all files inside, else it will embed only new files
+// New files are considered if they were created or edit in the last 60 seconds
 func (e *Engine) EmbedFiles(newDir bool) error {
 	dirs, err := e.SelectDirs()
 	if err != nil {
@@ -207,6 +193,7 @@ func (e *Engine) EmbedFiles(newDir bool) error {
 
 			if !newDir {
 				// Check if the file modification time is within the last 30 seconds
+				log.Println("WORKER ONLY FOUND DIRS FROM THE BASE, DEFAULT TO NEW FILES ONLY")
 				if now.Sub(fileInfo.ModTime()) >= 60*time.Second {
 					// Skip files older than 30 seconds
 					continue
@@ -252,6 +239,56 @@ func (e *Engine) EmbedFiles(newDir bool) error {
 				return err
 			}
 		}
+	}
+	return nil
+}
+
+// SECTION: Talk to the model
+// AskBase will prompt the model but it will use the files that it could find on the directores provided in the DIR section.
+func (e *Engine) AskBase(question string) error {
+	emb, err := e.GenerateEmbedding(context.Background(), string([]byte(question)))
+	if err != nil {
+		return err
+	}
+
+	vectorTable, err := e.Retrieve(emb.Embedding)
+	if err != nil {
+		return err
+	}
+
+	log.Printf("\n================\nVECTOR OUTPUT: %s\n================\n", vectorTable.Text)
+	e.PromptFormater(api.DEFAULTRAGPROMPT, map[string]string{
+		"context":  vectorTable.Text,
+		"question": question,
+	})
+
+	call, err := e.SendMessageTo(context.Background())
+	if err != nil {
+		return err
+	}
+
+	audioEngine := NewAudioEngine()
+	err = audioEngine.Speak(call.Response)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (e *Engine) AskLLM(question string) error {
+	e.PromptFormater(api.DEFAULTPROMPT, map[string]string{
+		"question": question,
+	})
+
+	call, err := e.SendMessageTo(context.Background())
+	if err != nil {
+		return err
+	}
+
+	audioEngine := NewAudioEngine()
+	err = audioEngine.Speak(call.Response)
+	if err != nil {
+		return err
 	}
 	return nil
 }

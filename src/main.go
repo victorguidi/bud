@@ -16,7 +16,6 @@ func main() {
 }
 
 // TODO: Create a simple Crawler For Websites
-// TODO: Add SQLite in order to save user data, like sites to craw, other...
 // TODO: Simple Frontend Client that is spawned with service (Talk | search docs)
 // TODO: Implement Integration with Audio Input to capture Microphone
 // TODO: Add module to convert Audio to Text

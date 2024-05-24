@@ -11,6 +11,7 @@ type BudCLI string
 
 // Constants for common HTTP methods
 const (
+	ASK     BudCLI = "ask"
 	ASKBASE BudCLI = "askbase"
 	DIR     BudCLI = "dir"
 	QUIT    BudCLI = "quit"
@@ -25,6 +26,8 @@ func ParseCommand(args []string) error {
 	case DIR.String():
 		SendCommand(strings.Join(args[1:], " "))
 	case ASKBASE.String():
+		SendCommand(strings.Join(args[1:], " "))
+	case ASK.String():
 		SendCommand(strings.Join(args[1:], " "))
 	}
 	return nil
