@@ -12,9 +12,10 @@ func main() {
 
 	api := engine.NewBudAPI(bud)
 	api.RegisterHandlers()
-	api.Start("5000")
+	api.Start("9875")
 }
 
+// TODO: Add help command
 // TODO: Create a simple Crawler For Websites
 // TODO: Simple Frontend Client that is spawned with service (Talk | search docs)
 // TODO: Implement Integration with Audio Input to capture Microphone

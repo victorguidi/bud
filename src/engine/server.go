@@ -26,7 +26,7 @@ func (e *Engine) StartServer() {
 		log.Printf("Failed to bind to port %s", e.Port)
 		os.Exit(1)
 	}
-	log.Printf("Engine Socket Listening on %s", e.Port)
+	log.Printf("Engine Socket Listening on: %s", e.Port)
 	for {
 		conn, err := l.Accept()
 		if err != nil {

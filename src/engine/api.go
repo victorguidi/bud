@@ -20,7 +20,7 @@ func NewBudAPI(engine *Engine) *BudAPI {
 }
 
 func (a *BudAPI) Start(port string) {
-	log.Printf("Starting Server on Port: %s", port)
+	log.Printf("Http Server Listening on: %s", port)
 	log.Fatal(http.ListenAndServe("localhost:"+port, a.Mux))
 }
 
