@@ -90,6 +90,7 @@ func (e *Engine) Run() {
 
 			case "DIR":
 				if content, ok := cmd.Content.(DirTrigger); ok {
+					newDir := false
 					if content.Dir != "" {
 						_, err := os.Stat(content.Dir)
 						if err != nil {
@@ -100,6 +101,7 @@ func (e *Engine) Run() {
 									log.Println("COULD NOT CREATE DIR:", content.Dir, err)
 									return
 								}
+								newDir = true
 							} else {
 								log.Println("COULD NOT HANDLE DIR:", content.Dir, err)
 								return
@@ -111,7 +113,7 @@ func (e *Engine) Run() {
 							return
 						}
 					}
-					go e.ProcessDirs(cmd.QuitChan)
+					go e.ProcessDirs(cmd.QuitChan, newDir)
 				}
 
 			case "ASKBASE":
@@ -131,14 +133,14 @@ func (e *Engine) Run() {
 
 func (e *Engine) Config() {}
 
-func (e *Engine) ProcessDirs(quit chan bool) {
+func (e *Engine) ProcessDirs(quit chan bool, newDir bool) {
 	for {
 		select {
 		case <-quit:
 			return
 		default:
 			time.Sleep(time.Second * 30)
-			err := e.EmbedFiles()
+			err := e.EmbedFiles(newDir)
 			if err != nil {
 				log.Println("ERROR CREATING THE EMBEDDINGS FOR THE FILES IN ONE OR MORE DIRECTORIES")
 				return
@@ -174,7 +176,7 @@ func (e *Engine) AskBase(question string) error {
 	return nil
 }
 
-func (e *Engine) EmbedFiles() error {
+func (e *Engine) EmbedFiles(newDir bool) error {
 	dirs, err := e.SelectDirs()
 	if err != nil {
 		return err
@@ -203,10 +205,12 @@ func (e *Engine) EmbedFiles() error {
 				continue
 			}
 
-			// Check if the file modification time is within the last 30 seconds
-			if now.Sub(fileInfo.ModTime()) >= 60*time.Second {
-				// Skip files older than 30 seconds
-				continue
+			if !newDir {
+				// Check if the file modification time is within the last 30 seconds
+				if now.Sub(fileInfo.ModTime()) >= 60*time.Second {
+					// Skip files older than 30 seconds
+					continue
+				}
 			}
 
 			switch filepath.Ext(file.Name()) {
@@ -253,31 +257,3 @@ func (e *Engine) EmbedFiles() error {
 }
 
 func (e *Engine) ProcessNews() {}
-
-// ProcessFiles read files (.pdf, .txt, .docx), generate Embeddings and send to a Postgres Vector Instance.
-// Once Asked the Model will always have the files here as knowledge too.
-// func (e *Engine) processdirs() error {
-// 	emb, err := ollamaAPI.GenerateEmbedding(context.Background(), string([]byte(<-e.QuestionChan)))
-// 	if err != nil {
-// 		return err
-// 	}
-//
-// 	vectorTable, err := vectorDB.Retrieve(emb.Embedding)
-// 	if err != nil {
-// 		return err
-// 	}
-//
-// 	log.Printf("\n================\nVECTOR OUTPUT: %s\n================\n", vectorTable.Text)
-// 	ollamaAPI.WithContext(<-e.QuestionChan, vectorTable.Text)
-// 	call, err := ollamaAPI.SendMessageTo(context.Background())
-// 	if err != nil {
-// 		return err
-// 	}
-//
-// 	audioEngine := NewAudioEngine()
-// 	err = audioEngine.Speak(call.Response)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	return nil
-// }
