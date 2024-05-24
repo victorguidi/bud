@@ -49,9 +49,9 @@ func (e *Engine) HandleConn(conn net.Conn) {
 		}
 
 		buf = bytes.Trim(buf, "\x00") // \x00 is NULL
+		buf = bytes.Trim(buf, "\r\n")
 
 		if len(buf) > 0 {
-			// conn.Write([]byte(e.ParseCommand(buf[:n], conn)))
 			conn.Write(e.CliParser(string(buf[:n])))
 		}
 	}

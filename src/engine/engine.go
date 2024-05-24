@@ -33,9 +33,8 @@ type EngineFunctions struct {
 }
 
 type EngineCommunicationPipe struct {
-	QuestionChan chan string
-	TriggerChan  chan Trigger
-	QuitChan     chan bool
+	TriggerChan chan Trigger
+	QuitChan    chan bool
 }
 
 type Trigger struct {
@@ -48,12 +47,15 @@ type DirTrigger struct {
 	Dir string
 }
 
+type BaseTrigger struct {
+	Question string
+}
+
 func New() *Engine {
 	return &Engine{
 		EngineCommunicationPipe{
-			QuestionChan: make(chan string),
-			TriggerChan:  make(chan Trigger),
-			QuitChan:     make(chan bool),
+			TriggerChan: make(chan Trigger),
+			QuitChan:    make(chan bool),
 		},
 		EngineFunctions{},
 		EngineProperties{
@@ -86,38 +88,41 @@ func (e *Engine) Run() {
 		case cmd := <-e.TriggerChan:
 			switch cmd.Trigger {
 
-			case "processDirs":
+			case "DIR":
 				if content, ok := cmd.Content.(DirTrigger); ok {
-					_, err := os.Stat(content.Dir)
-					if err != nil {
-						if os.IsNotExist(err) {
-							err := os.Mkdir(content.Dir, os.ModePerm)
-							if err != nil {
-								log.Println("COULD NOT CREATE DIR:", content.Dir, err)
+					if content.Dir != "" {
+						_, err := os.Stat(content.Dir)
+						if err != nil {
+							if os.IsNotExist(err) {
+								err := os.Mkdir(content.Dir, os.ModePerm)
+								log.Println("CREATED DIR: ", content.Dir)
+								if err != nil {
+									log.Println("COULD NOT CREATE DIR:", content.Dir, err)
+									return
+								}
+							} else {
+								log.Println("COULD NOT HANDLE DIR:", content.Dir, err)
 								return
 							}
-						} else {
-							log.Println("COULD NOT HANDLE DIR:", content.Dir, err)
+						}
+						err = e.InsertDirs(content.Dir)
+						if err != nil {
+							log.Println("COULD NOT SAVE THE DIR IN THE DB")
 							return
 						}
 					}
-
-					err = e.InsertDirs(content.Dir)
-					if err != nil {
-						log.Println("COULD NOT SAVE THE DIR IN THE DB")
-						return
-					}
-
 					go e.ProcessDirs(cmd.QuitChan)
 				}
 
-			case "processFile":
-				go e.ProcessFile("file")
+			case "ASKBASE":
+				if question, ok := cmd.Content.(BaseTrigger); ok {
+					go e.AskBase(question.Question)
+				}
 
 			default:
 				continue
 			}
-		case <-e.QuestionChan:
+		case <-e.QuitChan:
 			fmt.Println("quit")
 			return
 		}
@@ -142,8 +147,31 @@ func (e *Engine) ProcessDirs(quit chan bool) {
 	}
 }
 
-func (e *Engine) ProcessFile(path string) {
-	log.Println(path)
+func (e *Engine) AskBase(question string) error {
+	emb, err := e.GenerateEmbedding(context.Background(), string([]byte(question)))
+	if err != nil {
+		return err
+	}
+
+	vectorTable, err := e.Retrieve(emb.Embedding)
+	if err != nil {
+		return err
+	}
+
+	log.Printf("\n================\nVECTOR OUTPUT: %s\n================\n", vectorTable.Text)
+	e.WithContext(question, vectorTable.Text)
+	log.Println(question)
+	call, err := e.SendMessageTo(context.Background())
+	if err != nil {
+		return err
+	}
+
+	audioEngine := NewAudioEngine()
+	err = audioEngine.Speak(call.Response)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (e *Engine) EmbedFiles() error {
@@ -153,7 +181,7 @@ func (e *Engine) EmbedFiles() error {
 	}
 
 	if len(dirs) == 0 {
-		log.Println("NO FILES SAVED")
+		log.Println("NO DIRS SAVED, PLEASE PROVIDE A DIR")
 		return nil
 	}
 
