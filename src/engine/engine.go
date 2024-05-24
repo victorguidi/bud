@@ -88,7 +88,7 @@ func (e *Engine) Run() {
 		case cmd := <-e.TriggerChan:
 			switch cmd.Trigger {
 
-			case "DIR":
+			case DIR.String():
 				if content, ok := cmd.Content.(DirTrigger); ok {
 					newDir := false
 					if content.Dir != "" {
@@ -116,7 +116,7 @@ func (e *Engine) Run() {
 					go e.ProcessDirs(cmd.QuitChan, newDir)
 				}
 
-			case "ASKBASE":
+			case ASKBASE.String():
 				if question, ok := cmd.Content.(BaseTrigger); ok {
 					go e.AskBase(question.Question)
 				}

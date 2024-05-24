@@ -8,9 +8,9 @@ type BudCLI string
 
 // Constants for common HTTP methods
 const (
-	ASKBASE BudCLI = "ASKBASE"
-	DIR     BudCLI = "DIR"
-	QUIT    BudCLI = "QUIT"
+	ASKBASE BudCLI = "askbase"
+	DIR     BudCLI = "dir"
+	QUIT    BudCLI = "quit"
 )
 
 func (m BudCLI) String() string {
