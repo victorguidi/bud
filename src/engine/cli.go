@@ -80,5 +80,4 @@ func (e *Engine) CliParser(cmd string) []byte {
 	default:
 		return nil
 	}
-	return nil
 }

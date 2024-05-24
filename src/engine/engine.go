@@ -20,6 +20,7 @@ type Engine struct {
 	EngineFunctions
 	EngineProperties
 	ServerProperties
+	context.Context
 }
 
 type EngineProperties struct {
@@ -69,6 +70,7 @@ func New() *Engine {
 			Host: "0.0.0.0",
 			Port: "9876",
 		},
+		context.Background(),
 	}
 }
 
@@ -89,8 +91,8 @@ func (e *Engine) Run() {
 		select {
 		case cmd := <-e.TriggerChan:
 			switch cmd.Trigger {
-
 			case DIR.String():
+				log.Println("STARTING WORKER DIR")
 				Workers[DIR.String()] = &cmd
 				if content, ok := cmd.Content.(DirTrigger); ok {
 					newDir := false
@@ -147,10 +149,10 @@ func (e *Engine) ProcessDirs(quit chan bool, newDir bool) {
 	for {
 		select {
 		case <-quit:
-			log.Println("SERVICE DIRS IS DOWN")
+			log.Println("WORKER DIR IS DOWN")
 			return
 		default:
-			time.Sleep(time.Second * 30)
+			time.Sleep(time.Second * 5)
 			err := e.EmbedFiles(newDir)
 			if err != nil {
 				log.Println("ERROR CREATING THE EMBEDDINGS FOR THE FILES IN ONE OR MORE DIRECTORIES")
@@ -196,6 +198,7 @@ func (e *Engine) EmbedFiles(newDir bool) error {
 				log.Println("WORKER ONLY FOUND DIRS FROM THE BASE, DEFAULT TO NEW FILES ONLY")
 				if now.Sub(fileInfo.ModTime()) >= 60*time.Second {
 					// Skip files older than 30 seconds
+					log.Println("OLD FILE", file.Name())
 					continue
 				}
 			}
