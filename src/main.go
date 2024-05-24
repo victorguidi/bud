@@ -1,19 +1,16 @@
 package main
 
 import (
-	"os"
-
-	"gitlab.com/bud.git/src/api"
 	"gitlab.com/bud.git/src/engine"
 )
 
 func main() {
-	args := os.Args
-	engine := engine.New()
-	engine.CliArgs(args)
-	// engine.ProcessFiles()
+	bud := engine.New()
 
-	api := api.NewBudAPI()
+	go bud.Run()
+	go bud.StartServer()
+
+	api := engine.NewBudAPI(bud)
 	api.RegisterHandlers()
 	api.Start("5000")
 }

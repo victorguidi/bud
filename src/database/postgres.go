@@ -30,7 +30,7 @@ type PostgresVectorDB struct {
 	db *sql.DB
 }
 
-func New() *PostgresVectorDB {
+func NewPostgresVectorDB() *PostgresVectorDB {
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		log.Panic(err)
