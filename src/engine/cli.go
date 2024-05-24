@@ -23,23 +23,34 @@ func (e *Engine) CliParser(cmd string) []byte {
 	c := strings.Split(cmd, " ")
 	switch c[0] {
 	case DIR.String():
-		if strings.Contains(c[1], "-d") {
-			dir := ""
+
+		if strings.Contains(c[1], "-s") {
+			e.TriggerChan <- Trigger{
+				Trigger: DIR.String(),
+				Content: DirTrigger{
+					Dir: "",
+				},
+				QuitChan: make(chan bool),
+			}
+			return []byte("Starting Processing Dir")
+
+		} else if strings.Contains(c[1], "-S") {
+			log.Println("TURNING DOWN SERVICE DIRS")
+			Workers[DIR.String()].QuitChan <- true
+			return []byte("Stopped Processing Dirs")
+
+		} else {
 			if len(c) > 2 {
-				dir = strings.Trim(c[2], "\r\n")
+				return []byte("Please provide at least one path to a dir")
 			}
 			e.TriggerChan <- Trigger{
 				Trigger: DIR.String(),
 				Content: DirTrigger{
-					Dir: dir,
+					Dir: strings.Trim(c[2], "\r\n"),
 				},
 				QuitChan: make(chan bool),
 			}
 			return []byte("Processing Dir")
-		} else if strings.Contains(c[1], "-s") {
-			log.Println("TURNING DOWN SERVICE DIRS")
-			Workers[DIR.String()].QuitChan <- true
-			return []byte("Stopped Processing Dirs")
 		}
 
 	case ASKBASE.String():

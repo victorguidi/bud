@@ -37,8 +37,9 @@ func (a *BudAPI) Start(port string) {
 
 func (a *BudAPI) RegisterHandlers() {
 	// Dir ROUTES
-	a.POST("/dir", a.dir)
+	a.POST("/startdir", a.startdir)
 	a.POST("/quitdir", a.quitdir)
+	a.POST("/dir", a.dir)
 	a.GET("/onedir/{dirname}", a.getOneDir)
 	a.GET("/alldirs", a.getAllDirs)
 	a.PUT("/dir/{dirname}", a.updateDir)
@@ -101,6 +102,21 @@ func (a *BudAPI) DELETE(path string, handler http.HandlerFunc) {
 	a.Mux.HandleFunc(fmt.Sprintf("DELETE %s", path), handler)
 }
 
+func (a *BudAPI) startdir(w http.ResponseWriter, r *http.Request) {}
+
+func (a *BudAPI) quitdir(w http.ResponseWriter, r *http.Request) {
+	var dir DirBody
+	dir.Dir = ""
+	a.Engine.TriggerChan <- Trigger{
+		Trigger:  "processDirs",
+		Content:  DirTrigger(dir),
+		QuitChan: make(chan bool),
+	}
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "Worker Dir stopped",
+	})
+}
+
 func (a *BudAPI) dir(w http.ResponseWriter, r *http.Request) {
 	var dir DirBody
 	json.NewDecoder(r.Body).Decode(&dir)
@@ -112,13 +128,6 @@ func (a *BudAPI) dir(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(dir)
-}
-
-func (a *BudAPI) quitdir(w http.ResponseWriter, r *http.Request) {
-	Workers[DIR.String()].QuitChan <- true
-	json.NewEncoder(w).Encode(map[string]string{
-		"message": "Worker Dir stopped",
-	})
 }
 
 func (a *BudAPI) getOneDir(w http.ResponseWriter, r *http.Request) {
