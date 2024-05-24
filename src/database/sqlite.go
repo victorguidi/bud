@@ -82,3 +82,7 @@ func (d *SqlDB) SelectDirs() ([]TableDirs, error) {
 
 	return response, nil
 }
+
+func (d *SqlDB) SelectDir(dirname string) (TableDirs, error) {
+	return TableDirs{}, nil
+}

@@ -121,9 +121,22 @@ func (a *BudAPI) quitdir(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (a *BudAPI) getOneDir(w http.ResponseWriter, r *http.Request) {}
+func (a *BudAPI) getOneDir(w http.ResponseWriter, r *http.Request) {
+	dirname := r.PathValue("dirname")
+	dir, err := a.Engine.SelectDir(dirname)
+	if err != nil {
+		http.Error(w, "Something Went Wrong", http.StatusBadGateway)
+	}
+	json.NewEncoder(w).Encode(dir)
+}
 
-func (a *BudAPI) getAllDirs(w http.ResponseWriter, r *http.Request) {}
+func (a *BudAPI) getAllDirs(w http.ResponseWriter, r *http.Request) {
+	dirs, err := a.Engine.SelectDirs()
+	if err != nil {
+		http.Error(w, "Something Went Wrong", http.StatusBadGateway)
+	}
+	json.NewEncoder(w).Encode(dirs)
+}
 
 func (a *BudAPI) updateDir(w http.ResponseWriter, r *http.Request) {}
 
