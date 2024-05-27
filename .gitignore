@@ -25,3 +25,7 @@ bud
 data
 testfiles/cover.txt
 budengine
+samples
+src/include
+src/lib
+src/models
