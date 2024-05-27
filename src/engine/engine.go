@@ -21,6 +21,7 @@ type Engine struct {
 	EngineProperties
 	ServerProperties
 	context.Context
+	AudioEngine
 }
 
 type EngineProperties struct {
@@ -71,6 +72,10 @@ func New() *Engine {
 			Port: "9876",
 		},
 		context.Background(),
+		AudioEngine{
+			AudioChan:         make(chan bool),
+			AudioResponseChan: make(chan string),
+		},
 	}
 }
 

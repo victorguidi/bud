@@ -13,7 +13,7 @@ import (
 // NOTE: nomic-embed-text = 768
 
 const (
-	DEFAULTPROMPT    = "You are a helpfull assistant. Please answer the question provided in the PROMPT."
+	DEFAULTPROMPT    = "Your are a helpfull assistant. Please answer the question provided in the PROMPT."
 	DEFAULTRAGPROMPT = "You are a helpfull assistant that provides answer based on the knowledge given to you.If There is no context, answer: I don't know, maybe I need more context."
 )
 

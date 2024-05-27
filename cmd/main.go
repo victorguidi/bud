@@ -14,6 +14,7 @@ const (
 	ASK     BudCLI = "ask"
 	ASKBASE BudCLI = "askbase"
 	DIR     BudCLI = "dir"
+	LISTEN  BudCLI = "listen"
 	QUIT    BudCLI = "quit"
 )
 
@@ -28,6 +29,8 @@ func ParseCommand(args []string) error {
 	case ASKBASE.String():
 		SendCommand(strings.Join(args[1:], " "))
 	case ASK.String():
+		SendCommand(strings.Join(args[1:], " "))
+	case LISTEN.String():
 		SendCommand(strings.Join(args[1:], " "))
 	}
 	return nil

@@ -12,6 +12,7 @@ const (
 	ASK     BudCLI = "ask"
 	ASKBASE BudCLI = "askbase"
 	DIR     BudCLI = "dir"
+	LISTEN  BudCLI = "listen"
 	QUIT    BudCLI = "quit"
 )
 
@@ -72,6 +73,19 @@ func (e *Engine) CliParser(cmd string) []byte {
 			QuitChan: make(chan bool),
 		}
 		return []byte("Processing Question")
+
+	case LISTEN.String():
+		go func() {
+			e.AudioChan <- true
+			e.TriggerChan <- Trigger{
+				Trigger: ASK.String(),
+				Content: AskTrigger{
+					Question: <-e.AudioResponseChan,
+				},
+				QuitChan: make(chan bool),
+			}
+		}()
+		return []byte("Listening")
 
 	case QUIT.String():
 		e.QuitChan <- true
