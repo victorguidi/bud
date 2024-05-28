@@ -278,7 +278,7 @@ func (e *Engine) AskLLM(question string) error {
 }
 
 func (e *Engine) ClassifySpeechCmd(cmd string) (string, error) {
-	e.PromptFormater(api.DEFAULTPROMPT, map[string]string{
+	e.PromptFormater(api.DEFAULTCLASSIFIER, map[string]string{
 		"Command": cmd,
 	})
 

@@ -158,7 +158,9 @@ func (a *AudioEngine) CallWhisper() (string, error) {
 			break
 		}
 		fmt.Printf("[%6s->%6s] %s\n", segment.Start, segment.End, segment.Text)
-		if strings.Contains(strings.ToLower(segment.Text), "silence") {
+		if strings.Contains(strings.ToLower(segment.Text), "silence") ||
+			strings.Contains(strings.ToLower(segment.Text), "blank_audio") ||
+			strings.Contains(strings.ToLower(segment.Text), "sound") {
 			continue
 		}
 		cmd.WriteString(segment.Text)

@@ -60,19 +60,21 @@ func (w *WorkerListener) Kill() error {
 
 func (w *WorkerListener) Call(args ...any) {
 	w.AudioChan <- true
-	cmd, err := w.ClassifySpeechCmd(<-w.AudioResponseChan)
+	ans := <-w.AudioResponseChan
+	cmd, err := w.ClassifySpeechCmd(ans)
 	if err != nil {
 		log.Println("ERROR CLASSIFYING SPEECH COMMAND", err)
 		return
 	}
+	cmd = strings.ToLower(cmd)
 
 	for k, v := range w.Workers {
-		c := strings.Split(cmd, " ")
-		switch c[0] {
+		// c := strings.Split(cmd, " ")
+		switch cmd {
 		case k:
-			v.Call(w.Context, c[1:])
+			v.Call(w.Context, cmd+" "+ans)
 		case "kill":
-			if c[1] == k {
+			if cmd == k {
 				v.Kill()
 				delete(w.Workers, k)
 			}
