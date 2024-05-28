@@ -13,8 +13,23 @@ import (
 // NOTE: nomic-embed-text = 768
 
 const (
-	DEFAULTPROMPT    = "Your are a helpfull assistant. Please answer the question provided in the PROMPT."
-	DEFAULTRAGPROMPT = "You are a helpfull assistant that provides answer based on the knowledge given to you.If There is no context, answer: I don't know, maybe I need more context."
+	DEFAULTPROMPT     = "Your are a helpfull assistant. Please answer the question provided in the PROMPT."
+	DEFAULTRAGPROMPT  = "You are a helpfull assistant that provides answer based on the knowledge given to you.If There is no context, answer: I don't know, maybe I need more context."
+	DEFAULTCLASSIFIER = `
+  Classify the following command on: 
+    - ask: if the command does not seem to require some sort of provided context. (Example: What is the capital of Brazil?)
+    - askbase: if the command does seem to require some sort of provided context. (Example: What does the paper about Bitcoin say?)
+    - kill: if the commad seems to kill another command. (Example: kill worker ask)
+
+  Anser only with the command.
+  Examples:
+    What is the capital of Brazil?
+    ask
+
+    kill worker ask
+    kill ask
+
+  `
 )
 
 type OllamaAPI struct {

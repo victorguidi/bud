@@ -42,8 +42,11 @@ func (w *WorkerChat) Run() {
 	for {
 		select {
 		case <-w.Done():
+			close(w.TriggerChan)
+			close(w.QuitChan)
 			return
 		case <-w.QuitChan:
+			close(w.QuitChan)
 			return
 		case t := <-w.TriggerChan:
 			err := w.askLLM(t.Question)
@@ -60,7 +63,7 @@ func (w *WorkerChat) Run() {
 
 func (w *WorkerChat) Kill() error {
 	close(w.TriggerChan)
-	close(w.QuitChan)
+	w.QuitChan <- true
 	return nil
 }
 
@@ -75,6 +78,7 @@ func (w *WorkerChat) Call(args ...any) {
 }
 
 func (w *WorkerChat) askLLM(question string) error {
+	log.Println(question)
 	w.PromptFormater(api.DEFAULTPROMPT, map[string]string{
 		"question": question,
 	})
@@ -95,7 +99,7 @@ func (w *WorkerChat) askLLM(question string) error {
 func parseQuestion(prompt []string) string {
 	var question strings.Builder
 	for _, p := range prompt {
-		question.WriteString(fmt.Sprintf("%s", p))
+		question.WriteString(fmt.Sprintf("%s ", p))
 	}
 	return question.String()
 }

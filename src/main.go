@@ -3,7 +3,7 @@ package main
 // TODO: Add help command
 // TODO: Create a simple Crawler For Websites
 // TODO: Simple Frontend Client that is spawned with service (Talk | search docs)
-// TODO: Refactor Engine to accept Workers
+// FIX: Audio Engine Must have its own worker too
 
 import (
 	"context"

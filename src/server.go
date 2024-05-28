@@ -64,10 +64,18 @@ func (s *ServerProperties) HandleConn(conn net.Conn) {
 
 func (s *ServerProperties) CliParser(cmd string, conn net.Conn) {
 	for k, v := range Workers {
-		switch strings.ToLower(cmd) {
+		c := strings.Split(cmd, " ")
+		switch c[0] {
 		case k:
-			v.Call(s.Context, cmd)
-			conn.Write([]byte(fmt.Sprintf("Worker %s called\n", k)))
+			v.Call(s.Context, c[1:])
+			if conn != nil {
+				fmt.Fprintf(conn, "Worker %s called\n", k)
+			}
+		case "kill":
+			if c[1] == k {
+				v.Kill()
+				delete(Workers, k)
+			}
 		}
 	}
 }
