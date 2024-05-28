@@ -1,14 +1,16 @@
-package engine
+package main
 
 import (
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
+
+	"gitlab.com/bud.git/src/engine"
 )
 
 type BudAPI struct {
-	Engine *Engine
+	Engine *engine.Engine
 	Mux    *http.ServeMux
 	Middleware
 }
@@ -21,7 +23,7 @@ func (a *BudAPI) WithCors() {
 	a.Middleware = chain(cors, defaultHandler)
 }
 
-func NewBudAPI(engine *Engine) *BudAPI {
+func NewBudAPI(engine *engine.Engine) *BudAPI {
 	api := &BudAPI{
 		Mux:        http.NewServeMux(),
 		Engine:     engine,

@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	RECORDSECONDS = 3
+	RECORDSECONDS = 5
 )
 
 type AudioEngine struct {
@@ -31,12 +31,6 @@ func NewAudioEngine() *AudioEngine {
 	return &AudioEngine{}
 }
 
-type recorder struct {
-	*portaudio.Stream
-	buffer []float32
-	i      int
-}
-
 func (a *AudioEngine) Speak(output string) error {
 	log.Println(output)
 	cmd := exec.Command("spd-say", "-r", "100", "--wait", output)
@@ -45,6 +39,12 @@ func (a *AudioEngine) Speak(output string) error {
 		return err
 	}
 	return nil
+}
+
+type recorder struct {
+	*portaudio.Stream
+	buffer []float32
+	i      int
 }
 
 func (a *AudioEngine) Listen() {
@@ -92,7 +92,8 @@ func (a *AudioEngine) Listen() {
 			a.AudioResponseChan <- answer
 			e.Close()
 		default:
-			time.Sleep(100 * time.Millisecond) // Add a small sleep to avoid busy-wait
+			// Sleep to avoid busy-wait
+			time.Sleep(100 * time.Millisecond)
 		}
 	}
 }

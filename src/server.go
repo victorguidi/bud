@@ -1,26 +1,30 @@
-package engine
+package main
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log"
 	"net"
 	"os"
+	"strings"
 )
 
 type ServerProperties struct {
+	context.Context
 	Host string
 	Port string
 }
 
-func NewServerEngine(host, port string) *ServerProperties {
+func NewServerEngine(ctx context.Context, host, port string) *ServerProperties {
 	return &ServerProperties{
-		Host: host,
-		Port: port,
+		ctx,
+		host,
+		port,
 	}
 }
 
-func (e *Engine) StartServer() {
+func (e *ServerProperties) StartServer() {
 	l, err := net.Listen("tcp", fmt.Sprintf("%s:%s", e.Host, e.Port))
 	if err != nil {
 		log.Printf("Failed to bind to port %s", e.Port)
@@ -38,7 +42,7 @@ func (e *Engine) StartServer() {
 	}
 }
 
-func (e *Engine) HandleConn(conn net.Conn) {
+func (s *ServerProperties) HandleConn(conn net.Conn) {
 	defer conn.Close()
 
 	// This is so we can read everytime the user sends a message
@@ -53,7 +57,17 @@ func (e *Engine) HandleConn(conn net.Conn) {
 		buf = bytes.Trim(buf, "\r\n")
 
 		if len(buf) > 0 {
-			conn.Write(e.CliParser(string(buf[:n])))
+			s.CliParser(string(buf[:n]), conn)
+		}
+	}
+}
+
+func (s *ServerProperties) CliParser(cmd string, conn net.Conn) {
+	for k, v := range Workers {
+		switch strings.ToLower(cmd) {
+		case k:
+			v.Call(s.Context, cmd)
+			conn.Write([]byte(fmt.Sprintf("Worker %s called\n", k)))
 		}
 	}
 }

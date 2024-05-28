@@ -2,7 +2,6 @@ package engine
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -13,13 +12,9 @@ import (
 	"gitlab.com/bud.git/src/utils"
 )
 
-var Workers = make(map[string]*Trigger)
-
 type Engine struct {
-	EngineCommunicationPipe
 	EngineFunctions
 	EngineProperties
-	ServerProperties
 	context.Context
 	AudioEngine
 }
@@ -36,17 +31,6 @@ type EngineFunctions struct {
 	Crawler     func(sites []string)
 }
 
-type EngineCommunicationPipe struct {
-	TriggerChan chan Trigger
-	QuitChan    chan bool
-}
-
-type Trigger struct {
-	Content  interface{}
-	QuitChan chan bool
-	Trigger  string
-}
-
 type DirTrigger struct {
 	Dir string
 }
@@ -57,19 +41,11 @@ type AskTrigger struct {
 
 func New() *Engine {
 	return &Engine{
-		EngineCommunicationPipe{
-			TriggerChan: make(chan Trigger),
-			QuitChan:    make(chan bool),
-		},
 		EngineFunctions{},
 		EngineProperties{
 			OllamaAPI: *api.NewOllamaAPI(),
 			IVectorDB: database.NewPostgresVectorDB(),
 			SqlDB:     *database.NewSqlDB(),
-		},
-		ServerProperties{
-			Host: "0.0.0.0",
-			Port: "9876",
 		},
 		context.Background(),
 		AudioEngine{
@@ -92,58 +68,58 @@ func (e *Engine) Run() {
 		return
 	}
 
-	for {
-		select {
-		case cmd := <-e.TriggerChan:
-			switch cmd.Trigger {
-			case DIR.String():
-				log.Println("STARTING WORKER DIR")
-				Workers[DIR.String()] = &cmd
-				if content, ok := cmd.Content.(DirTrigger); ok {
-					newDir := false
-					if content.Dir != "" {
-						_, err := os.Stat(content.Dir)
-						if err != nil {
-							if os.IsNotExist(err) {
-								err := os.Mkdir(content.Dir, os.ModePerm)
-								log.Println("CREATED DIR: ", content.Dir)
-								if err != nil {
-									log.Println("COULD NOT CREATE DIR:", content.Dir, err)
-									return
-								}
-								newDir = true
-							} else {
-								log.Println("COULD NOT HANDLE DIR:", content.Dir, err)
-								return
-							}
-						}
-						err = e.InsertDirs(content.Dir)
-						if err != nil {
-							log.Println("COULD NOT SAVE THE DIR IN THE DB")
-							return
-						}
-					}
-					go e.ProcessDirs(cmd.QuitChan, newDir)
-				}
-
-			case ASKBASE.String():
-				if question, ok := cmd.Content.(AskTrigger); ok {
-					go e.AskBase(question.Question)
-				}
-
-			case ASK.String():
-				if question, ok := cmd.Content.(AskTrigger); ok {
-					go e.AskLLM(question.Question)
-				}
-
-			default:
-				continue
-			}
-		case <-e.QuitChan:
-			fmt.Println("quit")
-			return
-		}
-	}
+	// for {
+	// 	select {
+	// 	case cmd := <-e.TriggerChan:
+	// 		switch cmd.Trigger {
+	// 		case DIR.String():
+	// 			log.Println("STARTING WORKER DIR")
+	// 			Workers[DIR.String()] = &cmd
+	// 			if content, ok := cmd.Content.(DirTrigger); ok {
+	// 				newDir := false
+	// 				if content.Dir != "" {
+	// 					_, err := os.Stat(content.Dir)
+	// 					if err != nil {
+	// 						if os.IsNotExist(err) {
+	// 							err := os.Mkdir(content.Dir, os.ModePerm)
+	// 							log.Println("CREATED DIR: ", content.Dir)
+	// 							if err != nil {
+	// 								log.Println("COULD NOT CREATE DIR:", content.Dir, err)
+	// 								return
+	// 							}
+	// 							newDir = true
+	// 						} else {
+	// 							log.Println("COULD NOT HANDLE DIR:", content.Dir, err)
+	// 							return
+	// 						}
+	// 					}
+	// 					err = e.InsertDirs(content.Dir)
+	// 					if err != nil {
+	// 						log.Println("COULD NOT SAVE THE DIR IN THE DB")
+	// 						return
+	// 					}
+	// 				}
+	// 				go e.ProcessDirs(cmd.QuitChan, newDir)
+	// 			}
+	//
+	// 		case ASKBASE.String():
+	// 			if question, ok := cmd.Content.(AskTrigger); ok {
+	// 				go e.AskBase(question.Question)
+	// 			}
+	//
+	// 		case ASK.String():
+	// 			if question, ok := cmd.Content.(AskTrigger); ok {
+	// 				go e.AskLLM(question.Question)
+	// 			}
+	//
+	// 		default:
+	// 			continue
+	// 		}
+	// 	case <-e.QuitChan:
+	// 		fmt.Println("quit")
+	// 		return
+	// 	}
+	// }
 }
 
 func (e *Engine) Config() {}

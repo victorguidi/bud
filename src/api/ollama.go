@@ -55,8 +55,9 @@ func NewOllamaAPI() *OllamaAPI {
 	}
 }
 
-func (o *OllamaAPI) WithUrl(url string) {
+func (o *OllamaAPI) WithUrl(url string) *OllamaAPI {
 	o.Url = url
+	return o
 }
 
 func (o *OllamaAPI) WithModel(modelName string) {
