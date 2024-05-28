@@ -21,13 +21,13 @@ const (
     - askbase: if the command does seem to require some sort of provided context. (Example: What does the paper about Bitcoin say?)
     - kill: if the commad seems to kill another command. (Example: kill worker ask)
 
-  Anser only with the command.
+  Answer according to the example:
   Examples:
-    What is the capital of Brazil?
-    ask
+    User command: What is the capital of Brazil?
+    Assistant answer: ask What is the capital of Brazil?
 
-    kill worker ask
-    kill ask
+    User command: kill worker ask
+    Assistant answer: kill ask
 
   `
 )

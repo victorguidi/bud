@@ -89,13 +89,7 @@ func (a *AudioEngine) Listen() {
 			}
 
 			log.Println("FINAL ANSWER: ", answer)
-
-			// cmd, err := a.ClassifySpeechCmd(answer)
-			// if err != nil {
-			// 	log.Println("ERROR CLASSIFYING SPEECH COMMAND", err)
-			// 	return
-			// }
-			// a.AudioResponseChan <- answer
+			a.AudioResponseChan <- answer
 			e.Close()
 		default:
 			// Sleep to avoid busy-wait

@@ -3,7 +3,7 @@ package main
 // TODO: Add help command
 // TODO: Create a simple Crawler For Websites
 // TODO: Simple Frontend Client that is spawned with service (Talk | search docs)
-// FIX: Audio Engine Must have its own worker too
+// TODO: The Classifier is not working at all
 
 import (
 	"context"
@@ -25,6 +25,7 @@ func main() {
 	// Register Workers
 	registerWorkes(
 		new(workers.WorkerChat).Spawn(ctx, "ask", bud),
+		new(workers.WorkerListener).Spawn(ctx, "listen", bud),
 	)
 
 	NewBudAPI(bud).RegisterHandlers().Start("9875")
