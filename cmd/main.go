@@ -11,11 +11,12 @@ type BudCLI string
 
 // Constants for common HTTP methods
 const (
-	ASK     BudCLI = "ask"
-	ASKBASE BudCLI = "askbase"
-	DIR     BudCLI = "dir"
-	LISTEN  BudCLI = "listen"
-	QUIT    BudCLI = "quit"
+	ENABLE   BudCLI = "start"
+	DISABLED BudCLI = "stop"
+	CHAT     BudCLI = "chat"
+	RAG      BudCLI = "rag"
+	LISTEN   BudCLI = "listen"
+	KILL     BudCLI = "kill"
 )
 
 func (m BudCLI) String() string {
@@ -24,13 +25,17 @@ func (m BudCLI) String() string {
 
 func ParseCommand(args []string) error {
 	switch args[1] {
-	case DIR.String():
+	case ENABLE.String():
 		SendCommand(strings.Join(args[1:], " "))
-	case ASKBASE.String():
+	case DISABLED.String():
 		SendCommand(strings.Join(args[1:], " "))
-	case ASK.String():
+	case RAG.String():
+		SendCommand(strings.Join(args[1:], " "))
+	case CHAT.String():
 		SendCommand(strings.Join(args[1:], " "))
 	case LISTEN.String():
+		SendCommand(strings.Join(args[1:], " "))
+	case KILL.String():
 		SendCommand(strings.Join(args[1:], " "))
 	}
 	return nil

@@ -3,7 +3,7 @@ package main
 // TODO: Add help command
 // TODO: Create a simple Crawler For Websites
 // TODO: Simple Frontend Client that is spawned with service (Talk | search docs)
-// TODO: The Classifier is not working at all
+// TODO: Improve memory usage
 
 import (
 	"context"

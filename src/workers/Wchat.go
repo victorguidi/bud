@@ -17,6 +17,7 @@ type WorkerChat struct {
 	TriggerChan chan trigger
 	QuitChan    chan bool
 	*engine.Engine
+	WState
 }
 
 type trigger struct {
@@ -27,6 +28,10 @@ func (w *WorkerChat) GetWorkerID() string {
 	return w.WorkerID
 }
 
+func (w *WorkerChat) GetWorkerState() WState {
+	return w.WState
+}
+
 func (w *WorkerChat) Spawn(ctx context.Context, id string, engine *engine.Engine, args ...any) IWorker {
 	return &WorkerChat{
 		Context:     ctx,
@@ -34,10 +39,13 @@ func (w *WorkerChat) Spawn(ctx context.Context, id string, engine *engine.Engine
 		TriggerChan: make(chan trigger),
 		QuitChan:    make(chan bool),
 		Engine:      engine,
+		WState:      ENABLED,
 	}
 }
 
 func (w *WorkerChat) Run() {
+	w.WState = ENABLED
+	log.Println("STARTING WORKER", w.WorkerID)
 	// startTime := time.Now()
 	for {
 		select {
@@ -46,7 +54,7 @@ func (w *WorkerChat) Run() {
 			close(w.QuitChan)
 			return
 		case <-w.QuitChan:
-			close(w.QuitChan)
+			log.Println("STOPPING WORKER ", w.WorkerID)
 			return
 		case t := <-w.TriggerChan:
 			err := w.askLLM(t.Question)
@@ -61,28 +69,40 @@ func (w *WorkerChat) Run() {
 	}
 }
 
+func (w *WorkerChat) Stop() {
+	w.WState = DISABLED
+	w.QuitChan <- true
+}
+
 func (w *WorkerChat) Kill() error {
+	log.Println("KILLING WORKER ", w.WorkerID)
 	close(w.TriggerChan)
 	w.QuitChan <- true
+	close(w.QuitChan)
 	return nil
 }
 
 func (w *WorkerChat) Call(args ...any) {
-	for _, a := range args {
-		if q, ok := a.([]string); ok {
-			w.TriggerChan <- trigger{
-				Question: parseQuestion(q),
-			}
-		} else if a, ok := a.(string); ok {
-			w.TriggerChan <- trigger{
-				Question: a,
+	if w.String() == "on" {
+		for _, a := range args {
+			if q, ok := a.([]string); ok {
+				w.TriggerChan <- trigger{
+					Question: parseQuestion(q),
+				}
+			} else if a, ok := a.(string); ok {
+				w.TriggerChan <- trigger{
+					Question: a,
+				}
 			}
 		}
+	} else {
+		log.Printf("WORKER %s IS NOT ENABLED\n", w.WorkerID)
 	}
 }
 
 func (w *WorkerChat) askLLM(question string) error {
 	log.Println(question)
+	w.WithTokens(100) // This should be dynamic and have a way of changing with CLI and API
 	w.PromptFormater(api.DEFAULTPROMPT, map[string]string{
 		"Input": question,
 	})

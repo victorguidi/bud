@@ -15,6 +15,12 @@ type WorkerListener struct {
 	*engine.Engine
 	Workers  map[string]IWorker
 	WorkerID string
+	WState
+}
+
+// GetWorkerState implements IWorker.
+func (w *WorkerListener) GetWorkerState() WState {
+	return w.WState
 }
 
 func (w *WorkerListener) GetWorkerID() string {
@@ -28,6 +34,7 @@ func (w *WorkerListener) Spawn(ctx context.Context, id string, engine *engine.En
 		QuitChan: make(chan bool),
 		Engine:   engine,
 		Workers:  w.Workers,
+		WState:   ENABLED,
 	}
 }
 
@@ -37,6 +44,8 @@ func (w *WorkerListener) AddWorkers(workers map[string]IWorker) *WorkerListener 
 }
 
 func (w *WorkerListener) Run() {
+	w.WState = ENABLED
+	log.Println("STARTING WORKER", w.WorkerID)
 	// startTime := time.Now()
 	for {
 		select {
@@ -54,8 +63,15 @@ func (w *WorkerListener) Run() {
 	}
 }
 
-func (w *WorkerListener) Kill() error {
+func (w *WorkerListener) Stop() {
+	w.WState = DISABLED
 	w.QuitChan <- true
+}
+
+func (w *WorkerListener) Kill() error {
+	log.Println("KILLING WORKER ", w.WorkerID)
+	w.QuitChan <- true
+	close(w.QuitChan)
 	return nil
 }
 

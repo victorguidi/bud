@@ -67,9 +67,20 @@ func (s *ServerProperties) CliParser(cmd string, conn net.Conn) {
 		c := strings.Split(cmd, " ")
 		switch c[0] {
 		case k:
+			log.Println(k)
 			v.Call(c[1:])
 			if conn != nil {
 				fmt.Fprintf(conn, "Worker %s called\n", k)
+			}
+		case "start":
+			if c[1] == k {
+				go v.Run()
+				fmt.Fprintf(conn, "STARTED WORKER %s\n", k)
+			}
+		case "stop":
+			if c[1] == k {
+				go v.Stop()
+				fmt.Fprintf(conn, "STOPPED WORKER %s\n", k)
 			}
 		case "kill":
 			if c[1] == k {
