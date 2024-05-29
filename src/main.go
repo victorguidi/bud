@@ -1,6 +1,5 @@
 package main
 
-// TODO: Add help command
 // TODO: Create a simple Crawler For Websites
 // TODO: Simple Frontend Client that is spawned with service (Talk | search docs)
 // TODO: Improve memory usage

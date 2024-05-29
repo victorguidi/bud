@@ -66,27 +66,57 @@ func (s *ServerProperties) CliParser(cmd string, conn net.Conn) {
 	for k, v := range Workers {
 		c := strings.Split(cmd, " ")
 		switch c[0] {
+		case "help", "-h":
+			fmt.Fprint(conn, helpCommand())
+			return
 		case k:
-			log.Println(k)
 			v.Call(c[1:])
 			if conn != nil {
 				fmt.Fprintf(conn, "Worker %s called\n", k)
 			}
-		case "start":
+			return
+		case "start", "-s":
 			if c[1] == k {
 				go v.Run()
 				fmt.Fprintf(conn, "STARTED WORKER %s\n", k)
 			}
-		case "stop":
+			return
+		case "stop", "-S":
 			if c[1] == k {
 				go v.Stop()
 				fmt.Fprintf(conn, "STOPPED WORKER %s\n", k)
 			}
-		case "kill":
+			return
+		case "kill", "-k":
 			if c[1] == k {
 				v.Kill()
 				delete(Workers, k)
 			}
+			return
+		default:
+			fmt.Fprintf(conn, "COULD NOT FIND THE COMMAND, IS THE WORKER %s RUNNING?\n", k)
+			return
 		}
 	}
+}
+
+func helpCommand() string {
+	var help strings.Builder
+	help.WriteString("Usage:\n")
+	help.WriteString("  <command> [flags]\n")
+	help.WriteString("\n")
+	help.WriteString("Available commands:\n")
+	help.WriteString("  start -s <worker>     Start a new Worker.\n")
+	help.WriteString("  stop -S <worker>      Stop a Worker.\n")
+	help.WriteString("  kill -k <worker>      Kill a Worker.\n")
+	help.WriteString("  listen -l             Starts a Worker listener.\n")
+	help.WriteString("  help -h               Print this help message.\n")
+	// Add other commands and their brief descriptions here
+	// fmt.Println("  <command>  Describe the specific command in detail.")
+	// fmt.Println("")
+	// fmt.Println("Flags:")
+	// fmt.Println("  -h, --help  Print this help message.")
+	// // Add other flags and their descriptions here
+	// fmt.Println("  -<flag>     Describe the specific flag in detail.")
+	return help.String()
 }

@@ -17,26 +17,54 @@ const (
 	RAG      BudCLI = "rag"
 	LISTEN   BudCLI = "listen"
 	KILL     BudCLI = "kill"
+	HELP     BudCLI = "help"
 )
+
+// Map to associate BudCLI values with their aliases
+var cliAliases = map[BudCLI][]string{
+	ENABLE:   {"start", "-s"},
+	DISABLED: {"stop", "-x"},
+	CHAT:     {"chat", "-c"},
+	RAG:      {"rag", "-r"},
+	LISTEN:   {"listen", "-l"},
+	KILL:     {"kill", "-k"},
+	HELP:     {"help", "-h"},
+}
+
+// Method to check if a string matches any of the aliases
+func IsMatch(input string) (BudCLI, bool) {
+	for key, aliases := range cliAliases {
+		for _, alias := range aliases {
+			if input == alias {
+				return key, true
+			}
+		}
+	}
+	return "", false
+}
 
 func (m BudCLI) String() string {
 	return string(m)
 }
 
 func ParseCommand(args []string) error {
-	switch args[1] {
-	case ENABLE.String():
-		SendCommand(strings.Join(args[1:], " "))
-	case DISABLED.String():
-		SendCommand(strings.Join(args[1:], " "))
-	case RAG.String():
-		SendCommand(strings.Join(args[1:], " "))
-	case CHAT.String():
-		SendCommand(strings.Join(args[1:], " "))
-	case LISTEN.String():
-		SendCommand(strings.Join(args[1:], " "))
-	case KILL.String():
-		SendCommand(strings.Join(args[1:], " "))
+	if command, matched := IsMatch(args[1]); matched {
+		switch command.String() {
+		case ENABLE.String():
+			SendCommand(strings.Join(args[1:], " "))
+		case DISABLED.String():
+			SendCommand(strings.Join(args[1:], " "))
+		case RAG.String():
+			SendCommand(strings.Join(args[1:], " "))
+		case CHAT.String():
+			SendCommand(strings.Join(args[1:], " "))
+		case LISTEN.String():
+			SendCommand(strings.Join(args[1:], " "))
+		case KILL.String():
+			SendCommand(strings.Join(args[1:], " "))
+		case HELP.String():
+			SendCommand(strings.Join(args[1:], " "))
+		}
 	}
 	return nil
 }
