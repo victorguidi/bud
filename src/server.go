@@ -112,7 +112,9 @@ func helpCommand() string {
 	help.WriteString("  listen -l             Starts a Worker listener.\n")
 	help.WriteString("  help -h               Print this help message.\n")
 	// Add other commands and their brief descriptions here
-	// fmt.Println("  <command>  Describe the specific command in detail.")
+	help.WriteString("Worker Section\n")
+	help.WriteString("  Workers can be called by calling bud <worker> <params to worker>\n")
+	help.WriteString(`  Example: bud chat "Where is the capital of New Zealand?"` + "\n")
 	// fmt.Println("")
 	// fmt.Println("Flags:")
 	// fmt.Println("  -h, --help  Print this help message.")
