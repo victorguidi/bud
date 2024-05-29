@@ -67,7 +67,7 @@ func (s *ServerProperties) CliParser(cmd string, conn net.Conn) {
 		c := strings.Split(cmd, " ")
 		switch c[0] {
 		case k:
-			v.Call(s.Context, c[1:])
+			v.Call(c[1:])
 			if conn != nil {
 				fmt.Fprintf(conn, "Worker %s called\n", k)
 			}

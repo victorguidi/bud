@@ -279,7 +279,7 @@ func (e *Engine) AskLLM(question string) error {
 
 func (e *Engine) ClassifySpeechCmd(cmd string) (string, error) {
 	e.PromptFormater(api.DEFAULTCLASSIFIER, map[string]string{
-		"Command": cmd,
+		"Input": cmd,
 	})
 
 	e.WithTokens(100) // Reduce the ammount of tokens to 100 only

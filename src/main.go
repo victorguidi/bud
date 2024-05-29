@@ -24,8 +24,8 @@ func main() {
 
 	// Register Workers
 	registerWorkes(
-		new(workers.WorkerChat).Spawn(ctx, "ask", bud),
-		new(workers.WorkerListener).Spawn(ctx, "listen", bud),
+		new(workers.WorkerChat).Spawn(ctx, "chat", bud),
+		new(workers.WorkerListener).AddWorkers(Workers).Spawn(ctx, "listen", bud),
 	)
 
 	NewBudAPI(bud).RegisterHandlers().Start("9875")

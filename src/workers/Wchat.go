@@ -69,9 +69,13 @@ func (w *WorkerChat) Kill() error {
 
 func (w *WorkerChat) Call(args ...any) {
 	for _, a := range args {
-		if a, ok := a.([]string); ok {
+		if q, ok := a.([]string); ok {
 			w.TriggerChan <- trigger{
-				Question: parseQuestion(a),
+				Question: parseQuestion(q),
+			}
+		} else if a, ok := a.(string); ok {
+			w.TriggerChan <- trigger{
+				Question: a,
 			}
 		}
 	}
@@ -80,7 +84,7 @@ func (w *WorkerChat) Call(args ...any) {
 func (w *WorkerChat) askLLM(question string) error {
 	log.Println(question)
 	w.PromptFormater(api.DEFAULTPROMPT, map[string]string{
-		"question": question,
+		"Input": question,
 	})
 
 	call, err := w.SendMessageTo(context.Background())

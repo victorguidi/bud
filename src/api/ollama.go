@@ -13,29 +13,36 @@ import (
 // NOTE: nomic-embed-text = 768
 
 const (
-	DEFAULTPROMPT     = "Your are a helpfull assistant. Please answer the question provided in the PROMPT."
-	DEFAULTRAGPROMPT  = "You are a helpfull assistant that provides answer based on the knowledge given to you.If There is no context, answer: I don't know, maybe I need more context."
+	DEFAULTPROMPT = `
+You are a helpful assistant. Please answer the question provided in the "Input".
+
+Input: %s`
+
+	DEFAULTRAGPROMPT = "You are a helpfull assistant that provides answer based on the knowledge given to you.If There is no context, answer: I don't know, maybe I need more context."
+
 	DEFAULTCLASSIFIER = `
-Classify the following command into one of the three categories:
+You are a text classification model. Your task is to classify the given command as one of the following categories: "chat", "rag", or "kill". Here are the definitions for each category:
 
-ask: if the command does not require additional context.
-Example: "What is the capital of Brazil?"
-base: if the command requires additional context.
-Example: "What does the paper about Bitcoin say?"
-kill: if the command is meant to terminate another command.
-Example: "kill worker ask"
-Respond with the appropriate category followed by the command, as shown in the examples:
+"chat": Commands that involve general conversation or questions about information, such as asking for facts or details.
+"rag": Commands that involve retrieving specific documents or data, such as asking for reports or papers.
+"kill": Commands that involve stopping or terminating a process, such as stopping a worker or a service.
+Respond only with the appropriate category name.
 
-Examples:
+For example:
 
-User command: "What is the capital of Brazil?"
-Assistant answer: ask What is the capital of Brazil?
+Input: What is the capital of New Zealand?
+Output: chat
 
-User command: "kill worker ask"
-Assistant answer: kill kill worker ask
+Input: Stop chat
+Output: kill
 
-Based on the examples provided, classify the following user command accordingly:
+Input: Do I have any paper about bitcoin?
+Output: rag
 
+Now, provide the command to be classified:
+
+Input: %s
+Output:
   `
 )
 
@@ -143,11 +150,13 @@ func (o *OllamaAPI) GenerateEmbedding(ctx context.Context, content string) (*Oll
 
 func (o *OllamaAPI) PromptFormater(prompt string, values interface{}) {
 	var p strings.Builder
-	p.WriteString(prompt)
 	if values, ok := values.(map[string]string); ok {
-		for key, value := range values {
-			p.WriteString(fmt.Sprintf("%s:%s", key, value))
+		for k, value := range values {
+			if strings.Contains(prompt, k) {
+				p.WriteString(fmt.Sprintf(prompt, value))
+			}
 		}
 	}
+	log.Println("PROMPT SENT TO MODEL: ", p.String())
 	o.Prompt = p.String()
 }
