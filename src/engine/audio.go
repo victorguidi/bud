@@ -22,13 +22,26 @@ const (
 	RECORDSECONDS = 5
 )
 
+var DEFAULTPATHFORMODELS = filepath.Join("src", "models", "ggml-base.en.bin")
+
 type AudioEngine struct {
 	AudioChan         chan bool
 	AudioResponseChan chan string
+	whisper           whisper.Model
+	StopListenerChan  chan bool
 }
 
 func NewAudioEngine() *AudioEngine {
 	return &AudioEngine{}
+}
+
+func (a *AudioEngine) LoadWhisper() *AudioEngine {
+	m, err := whisper.New(DEFAULTPATHFORMODELS)
+	if err != nil {
+		panic(err)
+	}
+	a.whisper = m
+	return a
 }
 
 func (a *AudioEngine) Speak(output string) error {
@@ -51,8 +64,13 @@ func (a *AudioEngine) Listen() {
 	portaudio.Initialize()
 	defer portaudio.Terminate()
 
+	defer a.whisper.Close()
+
 	for {
 		select {
+		case <-a.StopListenerChan:
+			log.Println("STOPPING LISTENER")
+			return
 		case <-a.AudioChan:
 			e, err := newRecorder(time.Second * time.Duration(RECORDSECONDS))
 			if err != nil {
@@ -120,29 +138,28 @@ func (r *recorder) processAudio(in, out []float32) {
 	}
 }
 
-func (a *AudioEngine) STT() error {
-	return nil
-}
-
 func (a *AudioEngine) CallWhisper() (string, error) {
 	defer func() {
 		os.Remove(filepath.Join("samples", "cmd.wav"))
+
+		// FIX: I dont think calling like this is the best way to manage the memory, but pre usage is already at 230~250M allocation...
+		// Memory profiling
+		// f, _ := os.Create("memprofile")
+		// pprof.WriteHeapProfile(f)
+		// f.Close()
+
+		a.whisper.Close()
+		a.LoadWhisper()
 	}()
-	modelpath := filepath.Join("src", "models", "ggml-base.en.bin")
+
 	samples, err := utils.ReadWav(filepath.Join("samples", "cmd.wav"))
 	if err != nil {
 		return "", err
 	}
 
-	// Load the model
-	model, err := whisper.New(modelpath)
-	if err != nil {
-		panic(err)
-	}
-	defer model.Close()
-
 	// Process samples
-	context, err := model.NewContext()
+	context, err := a.whisper.NewContext()
+	// context, err := a.whisper.NewContext()
 	if err != nil {
 		panic(err)
 	}

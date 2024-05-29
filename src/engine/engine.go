@@ -31,6 +31,7 @@ func New() *Engine {
 		AudioEngine{
 			AudioChan:         make(chan bool),
 			AudioResponseChan: make(chan string),
+			StopListenerChan:  make(chan bool),
 		},
 	}
 }

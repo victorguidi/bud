@@ -44,6 +44,7 @@ func (w *WorkerListener) AddWorkers(workers map[string]IWorker) *WorkerListener 
 }
 
 func (w *WorkerListener) Run() {
+	go w.LoadWhisper().Listen()
 	w.WState = ENABLED
 	log.Println("STARTING WORKER", w.WorkerID)
 	// startTime := time.Now()
@@ -53,7 +54,8 @@ func (w *WorkerListener) Run() {
 			close(w.QuitChan)
 			return
 		case <-w.QuitChan:
-			close(w.QuitChan)
+			log.Println("STOPPING WORKER ", w.WorkerID)
+			w.StopListenerChan <- true
 			return
 		default:
 			time.Sleep(time.Millisecond * 100)

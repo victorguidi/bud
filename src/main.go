@@ -3,6 +3,7 @@ package main
 // TODO: Create a simple Crawler For Websites
 // TODO: Simple Frontend Client that is spawned with service (Talk | search docs)
 // TODO: Improve memory usage
+// FIX: Memory allocation for Whisper is quite weird
 
 import (
 	"context"
@@ -19,7 +20,6 @@ func main() {
 
 	bud.Run() // Start the Engine
 
-	go bud.Listen()                                          // Start the Augio Engine
 	go NewServerEngine(ctx, "0.0.0.0", "9876").StartServer() // Start the Engine Socket
 
 	// Register Workers

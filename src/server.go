@@ -74,27 +74,28 @@ func (s *ServerProperties) CliParser(cmd string, conn net.Conn) {
 			v.Call(c[1:])
 			if conn != nil {
 				fmt.Fprintf(conn, "Worker %s called\n", k)
+				return
 			}
-			return
 		case "start", "-s":
 			if len(c) > 1 && c[1] == k {
 				go v.Run()
 				fmt.Fprintf(conn, "STARTED WORKER %s\n", k)
+				return
 			}
-			return
 		case "stop", "-S":
 			if len(c) > 1 && c[1] == k {
+				log.Println(c[1])
 				go v.Stop()
 				fmt.Fprintf(conn, "STOPPED WORKER %s\n", k)
+				return
 			}
-			return
 		case "kill", "-k":
 			if len(c) > 1 && c[1] == k {
 				v.Kill()
 				delete(Workers, k)
 				fmt.Fprintf(conn, "KILLED WORKER %s\n", k)
+				return
 			}
-			return
 		default:
 			continue
 		}
