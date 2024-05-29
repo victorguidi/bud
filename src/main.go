@@ -17,14 +17,16 @@ func main() {
 	ctx := context.Background()
 	bud := engine.New()
 
-	bud.Run()                                                // Start the Engine
+	bud.Run() // Start the Engine
+
 	go bud.Listen()                                          // Start the Augio Engine
 	go NewServerEngine(ctx, "0.0.0.0", "9876").StartServer() // Start the Engine Socket
 
 	// Register Workers
-	registerWorkes(
+	go registerWorkes(
 		new(workers.WorkerChat).Spawn(ctx, "chat", bud),
 		new(workers.WorkerListener).AddWorkers(Workers).Spawn(ctx, "listen", bud),
+		new(workers.WorkerRag).Spawn(ctx, "rag", bud),
 	)
 
 	NewBudAPI(bud).RegisterHandlers().Start("9875")

@@ -65,6 +65,8 @@ func ParseCommand(args []string) error {
 		case HELP.String():
 			SendCommand(strings.Join(args[1:], " "))
 		}
+	} else {
+		SendCommand(HELP.String())
 	}
 	return nil
 }

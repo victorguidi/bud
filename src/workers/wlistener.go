@@ -84,33 +84,36 @@ func (w *WorkerListener) Call(args ...any) {
 		return
 	}
 	cmd = strings.ToLower(cmd)
-	cmd = strings.ReplaceAll(cmd, " ", "")
-	cmd = strings.ReplaceAll(cmd, ":", "")
+	cmd = strings.ReplaceAll(cmd, "output: ", "")
+	found := false
 
 	for k, v := range w.Workers {
-		// c := strings.Split(cmd, " ")
-		log.Println("WORKER:", k)
-		switch cmd {
-		case k:
+		switch strings.Contains(cmd, k) {
+		case true:
 			log.Println(cmd)
-			v.Call(question)
+			v.Call([]string{question})
+			found = true
 			return
-		case "kill":
-			if cmd == k {
-				v.Kill()
-				delete(w.Workers, k)
+		case false:
+			if cmd == "kill" {
+				found = true
+				log.Println("KILLING WORKER CALLED")
+				// if cmd == k {
+				//   v.Kill()
+				//   delete(w.Workers, k)
+				// }
 			}
-			return
-		default:
-			log.Println("DEFAULTED THE COMMAND")
-			if w.Workers["chat"] != nil {
-				log.Println("CALLING CHAT WORKER")
-				w.Workers["chat"].Call(question)
-			} else {
-				log.Println("NO WORKER FOUND")
-				w.Speak("NO WORKER FOUND")
-			}
-			return
+			continue
+		}
+	}
+	if !found {
+		log.Println("DEFAULTED THE COMMAND")
+		if w.Workers["chat"] != nil {
+			log.Println("CALLING CHAT WORKER")
+			w.Workers["chat"].Call(question)
+		} else {
+			log.Println("NO WORKER FOUND")
+			w.Speak("NO WORKER FOUND")
 		}
 	}
 }

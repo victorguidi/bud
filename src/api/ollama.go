@@ -18,7 +18,16 @@ You are a helpful assistant. Please answer the question provided in the "Input".
 
 Input: %s`
 
-	DEFAULTRAGPROMPT = "You are a helpfull assistant that provides answer based on the knowledge given to you.If There is no context, answer: I don't know, maybe I need more context."
+	DEFAULTRAGPROMPT = `
+You are a helpful assistant that provides answers based on the knowledge given to you. Use the provided context to answer the question. If you cannot find the answer in the provided context, respond with: "I didn't find anything on the documents provided."
+
+Context:
+%s
+
+Input: %s
+
+Answer:
+`
 
 	DEFAULTCLASSIFIER = `
 You are a text classification model. Your task is to classify the given command as one of the following categories: "chat", "rag", or "kill". Here are the definitions for each category:
@@ -151,11 +160,13 @@ func (o *OllamaAPI) GenerateEmbedding(ctx context.Context, content string) (*Oll
 func (o *OllamaAPI) PromptFormater(prompt string, values interface{}) {
 	var p strings.Builder
 	if values, ok := values.(map[string]string); ok {
+		vs := []any{}
 		for k, value := range values {
 			if strings.Contains(prompt, k) {
-				p.WriteString(fmt.Sprintf(prompt, value))
+				vs = append(vs, value)
 			}
 		}
+		p.WriteString(fmt.Sprintf(prompt, vs...))
 	}
 	log.Println("PROMPT SENT TO MODEL: ", p.String())
 	o.Prompt = p.String()

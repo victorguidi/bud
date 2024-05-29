@@ -63,8 +63,9 @@ func (s *ServerProperties) HandleConn(conn net.Conn) {
 }
 
 func (s *ServerProperties) CliParser(cmd string, conn net.Conn) {
+	c := strings.Split(cmd, " ")
+
 	for k, v := range Workers {
-		c := strings.Split(cmd, " ")
 		switch c[0] {
 		case "help", "-h":
 			fmt.Fprint(conn, helpCommand())
@@ -76,28 +77,29 @@ func (s *ServerProperties) CliParser(cmd string, conn net.Conn) {
 			}
 			return
 		case "start", "-s":
-			if c[1] == k {
+			if len(c) > 1 && c[1] == k {
 				go v.Run()
 				fmt.Fprintf(conn, "STARTED WORKER %s\n", k)
 			}
 			return
 		case "stop", "-S":
-			if c[1] == k {
+			if len(c) > 1 && c[1] == k {
 				go v.Stop()
 				fmt.Fprintf(conn, "STOPPED WORKER %s\n", k)
 			}
 			return
 		case "kill", "-k":
-			if c[1] == k {
+			if len(c) > 1 && c[1] == k {
 				v.Kill()
 				delete(Workers, k)
+				fmt.Fprintf(conn, "KILLED WORKER %s\n", k)
 			}
 			return
 		default:
-			fmt.Fprintf(conn, "COULD NOT FIND THE COMMAND, IS THE WORKER %s RUNNING?\n", k)
-			return
+			continue
 		}
 	}
+	fmt.Fprintln(conn, "COULD NOT FIND THE COMMAND, ARE THERE ANY WORKERS RUNNING?")
 }
 
 func helpCommand() string {
