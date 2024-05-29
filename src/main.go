@@ -29,7 +29,7 @@ func main() {
 		new(workers.WorkerRag).Spawn(ctx, "rag", bud),
 	)
 
-	NewBudAPI(bud).RegisterHandlers().Start("9875")
+	NewBudAPI(bud).AddWorkers(Workers).RegisterHandlers().Start("9875")
 }
 
 func registerWorkes(workers ...workers.IWorker) {

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"gitlab.com/bud.git/src/api"
+	"gitlab.com/bud.git/src/database"
 	"gitlab.com/bud.git/src/engine"
 )
 
@@ -18,7 +19,10 @@ type WorkerChat struct {
 	QuitChan    chan bool
 	*engine.Engine
 	WState
+	database.ISqlDB[WorkerChat]
 }
+
+type WorkerChatConfig struct{}
 
 type trigger struct {
 	Question string

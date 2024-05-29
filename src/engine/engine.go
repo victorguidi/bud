@@ -9,23 +9,23 @@ import (
 )
 
 type Engine struct {
-	EngineProperties
+	EngineProperties[Engine]
 	context.Context
 	AudioEngine
 }
 
-type EngineProperties struct {
-	database.SqlDB
+type EngineProperties[T any] struct {
+	database.SqlDB[T]
 	database.IVectorDB
 	api.OllamaAPI
 }
 
 func New() *Engine {
 	return &Engine{
-		EngineProperties{
+		EngineProperties[Engine]{
 			OllamaAPI: *api.NewOllamaAPI(),
 			IVectorDB: database.NewPostgresVectorDB(),
-			SqlDB:     *database.NewSqlDB(),
+			SqlDB:     *database.NewSqlDB[Engine](),
 		},
 		context.Background(),
 		AudioEngine{
@@ -34,6 +34,10 @@ func New() *Engine {
 			StopListenerChan:  make(chan bool),
 		},
 	}
+}
+
+func (e *EngineProperties[T]) DatabaseType(T) {
+	e.SqlDB = *database.NewSqlDB[T]()
 }
 
 func (e *Engine) Run() {

@@ -7,16 +7,18 @@ import (
 	"net/http"
 
 	"gitlab.com/bud.git/src/engine"
+	"gitlab.com/bud.git/src/workers"
 )
 
 type BudAPI struct {
-	Engine *engine.Engine
-	Mux    *http.ServeMux
+	Workers map[string]workers.IWorker
+	Engine  *engine.Engine
+	Mux     *http.ServeMux
 	Middleware
 }
 
 type DirBody struct {
-	Dir string `json:"dir"`
+	Dir []string `json:"dir"`
 }
 
 func (a *BudAPI) WithCors() {
@@ -32,6 +34,11 @@ func NewBudAPI(engine *engine.Engine) *BudAPI {
 	return api
 }
 
+func (a *BudAPI) AddWorkers(workers map[string]workers.IWorker) *BudAPI {
+	a.Workers = workers
+	return a
+}
+
 func (a *BudAPI) Start(port string) {
 	log.Printf("Http Server Listening on: %s", port)
 	log.Fatal(http.ListenAndServe("localhost:"+port, a.Mux))
@@ -39,8 +46,8 @@ func (a *BudAPI) Start(port string) {
 
 func (a *BudAPI) RegisterHandlers() *BudAPI {
 	// Dir ROUTES
-	a.POST("/startdir", a.startdirworker)
-	a.POST("/stopdir", a.quitdirworker)
+	a.POST("/startrag", a.startragworker)
+	a.POST("/stoprag", a.quitragworker)
 	a.POST("/dir", a.dir)
 	a.GET("/onedir/{dirname}", a.getOneDir)
 	a.GET("/alldirs", a.getAllDirs)
@@ -106,37 +113,29 @@ func (a *BudAPI) DELETE(path string, handler http.HandlerFunc) {
 	a.Mux.HandleFunc(fmt.Sprintf("DELETE %s", path), a.Middleware(handler))
 }
 
-func (a *BudAPI) startdirworker(w http.ResponseWriter, r *http.Request) {
-	// var dir DirBody
-	// dir.Dir = ""
-	// a.Engine.TriggerChan <- Trigger{
-	// 	Trigger:  DIR.String(),
-	// 	Content:  DirTrigger(dir),
-	// 	QuitChan: make(chan bool),
-	// }
-	// json.NewEncoder(w).Encode(map[string]string{
-	// 	"message": "Worker Dir started",
-	// })
+func (a *BudAPI) startragworker(w http.ResponseWriter, r *http.Request) {
+	go a.Workers["rag"].Run()
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "Worker Dir started",
+	})
 }
 
-func (a *BudAPI) quitdirworker(w http.ResponseWriter, r *http.Request) {
-	// Workers[DIR.String()].QuitChan <- true
-	// json.NewEncoder(w).Encode(map[string]string{
-	// 	"message": "Stopping Work Dir",
-	// })
+func (a *BudAPI) quitragworker(w http.ResponseWriter, r *http.Request) {
+	Workers["rag"].Stop()
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "Stopping Work Dir",
+	})
 }
 
 func (a *BudAPI) dir(w http.ResponseWriter, r *http.Request) {
-	// var dir DirBody
-	// json.NewDecoder(r.Body).Decode(&dir)
-	//
-	// a.Engine.TriggerChan <- Trigger{
-	// 	Trigger:  DIR.String(),
-	// 	Content:  DirTrigger(dir),
-	// 	QuitChan: make(chan bool),
-	// }
-	//
-	// json.NewEncoder(w).Encode(dir)
+	var dir DirBody
+	json.NewDecoder(r.Body).Decode(&dir)
+
+	cmd := []string{"new"}
+	cmd = append(cmd, dir.Dir...)
+	a.Workers["rag"].Call(cmd)
+
+	json.NewEncoder(w).Encode(dir)
 }
 
 func (a *BudAPI) getOneDir(w http.ResponseWriter, r *http.Request) {
