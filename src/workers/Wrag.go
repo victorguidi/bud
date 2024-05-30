@@ -24,7 +24,9 @@ type WorkerRag struct {
 	database.ISqlDB[WorkerRagConfig]
 }
 
-type WorkerRagConfig struct{}
+type WorkerRagConfig struct {
+	Dir string
+}
 
 type ragtrigger struct {
 	Question string
@@ -46,7 +48,7 @@ func (w *WorkerRag) Spawn(ctx context.Context, id string, engine *engine.Engine,
 		QuitChan:    make(chan bool),
 		Engine:      engine,
 		WState:      ENABLED,
-		ISqlDB:      database.NewSqlDB[WorkerChatConfig](),
+		ISqlDB:      database.NewSqlDB[WorkerRagConfig](),
 	}
 }
 
@@ -100,7 +102,7 @@ func (w *WorkerRag) Call(args ...any) {
 				switch cmd[0] {
 				case "new":
 					for _, dir := range cmd[1:] {
-						err := w.Insert(dir)
+						err := w.Insert(&WorkerRagConfig{})
 						if err != nil {
 							log.Println("ERROR INSERTING DIR: ", dir)
 						}
@@ -126,7 +128,8 @@ func (w *WorkerRag) Call(args ...any) {
 // EmbedFiles will look at dirs that are stored at the SQLite database, if the dir is new it will embed all files inside, else it will embed only new files
 // New files are considered if they were created or edit in the last 60 seconds
 func (w *WorkerRag) EmbedFiles(newDir bool) error {
-	dirs, err := w.SelectDirs()
+	dirs := make([]WorkerRagConfig, 0)
+	err := w.GetAll(&dirs)
 	if err != nil {
 		return err
 	}

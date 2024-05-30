@@ -14,12 +14,13 @@ type SqlDB[T any] struct {
 type Engine struct{}
 
 type ISqlDB[T any] interface {
-	get(id string, obj T) error
-	getAll(obj T) error
-	insert(obj T) error
-	update(id string, obj T) error
-	deleteOne(id string) error
-	clean() error
+	Get(id string, obj *T) error
+	GetAll(objs *[]T) error
+	Insert(obj *T) error
+	Update(id string, obj *T) error
+	DeleteOne(id string) error
+	Clean() error
+	Run(query string) error
 }
 
 type TableDirs struct {
@@ -119,17 +120,22 @@ func (d *SqlDB[Engine]) Init() error {
 // 	return TableDirs{}, nil
 // }
 
-func (d *SqlDB[T]) Get(id string, obj *T) error {
+func (d SqlDB[T]) Run(query string) error {
+	_, err := d.db.Exec(query)
+	return err
+}
+
+func (d SqlDB[T]) Get(id string, obj *T) error {
 	query := "SELECT * FROM table WHERE id = ?"
 	return d.querySingle(query, obj, id)
 }
 
-func (d *SqlDB[T]) GetAll(objs *[]T) error {
+func (d SqlDB[T]) GetAll(objs *[]T) error {
 	query := "SELECT * FROM table"
 	return d.queryMultiple(query, objs)
 }
 
-func (d *SqlDB[T]) Insert(obj *T) error {
+func (d SqlDB[T]) Insert(obj *T) error {
 	// Example insert query
 	query := "INSERT INTO table (columns) VALUES (values)"
 	// You will need to fill the values and columns accordingly
@@ -137,7 +143,7 @@ func (d *SqlDB[T]) Insert(obj *T) error {
 	return err
 }
 
-func (d *SqlDB[T]) Update(id string, obj *T) error {
+func (d SqlDB[T]) Update(id string, obj *T) error {
 	// Example update query
 	query := "UPDATE table SET columns = values WHERE id = ?"
 	// You will need to fill the columns and values accordingly
@@ -145,24 +151,24 @@ func (d *SqlDB[T]) Update(id string, obj *T) error {
 	return err
 }
 
-func (d *SqlDB[T]) DeleteOne(id string) error {
+func (d SqlDB[T]) DeleteOne(id string) error {
 	query := "DELETE FROM table WHERE id = ?"
 	_, err := d.db.Exec(query, id)
 	return err
 }
 
-func (d *SqlDB[T]) Clean() error {
+func (d SqlDB[T]) Clean() error {
 	query := "DELETE FROM table"
 	_, err := d.db.Exec(query)
 	return err
 }
 
-func (d *SqlDB[T]) querySingle(query string, obj *T, args ...interface{}) error {
+func (d SqlDB[T]) querySingle(query string, obj *T, args ...interface{}) error {
 	row := d.db.QueryRow(query, args...)
 	return row.Scan(obj)
 }
 
-func (d *SqlDB[T]) queryMultiple(query string, objs *[]T, args ...interface{}) error {
+func (d SqlDB[T]) queryMultiple(query string, objs *[]T, args ...interface{}) error {
 	rows, err := d.db.Query(query, args...)
 	if err != nil {
 		return err
