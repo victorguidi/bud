@@ -43,6 +43,7 @@ func (w *WorkerRag) GetWorkerState() WState {
 }
 
 func (w *WorkerRag) Spawn(ctx context.Context, id string, engine *engine.Engine, args ...any) IWorker {
+	log.Println("HELLO")
 	return &WorkerRag{
 		Context:     ctx,
 		WorkerID:    id,
@@ -57,6 +58,7 @@ func (w *WorkerRag) Spawn(ctx context.Context, id string, engine *engine.Engine,
 func (w *WorkerRag) Run() {
 	w.WState = ENABLED
 	log.Println("STARTING WORKER", w.WorkerID)
+	w.RegisterHandlers()
 	// startTime := time.Now()
 	for {
 		select {
@@ -252,9 +254,8 @@ type DirBody struct {
 
 func (a *WorkerRag) RegisterHandlers() {
 	// Dir ROUTES
-	a.GET("/test", a.test)
 	a.POST("/startrag", a.startragworker)
-	// a.POST("/stoprag", a.quitragworker)
+	a.POST("/stoprag", a.quitragworker)
 	// a.POST("/dir", a.dir)
 	// a.GET("/onedir/{dirname}", a.getOneDir)
 	// a.GET("/alldirs", a.getAllDirs)
@@ -266,12 +267,6 @@ func (a *WorkerRag) RegisterHandlers() {
 	// a.POST("/ask", a.dir)
 	// a.POST("/askbase", a.dir)
 	// a.POST("/askfile", a.dir)
-}
-
-func (a *WorkerRag) test(w http.ResponseWriter, r *http.Request) {
-	json.NewEncoder(w).Encode(map[string]string{
-		"message": "Worker Dir started",
-	})
 }
 
 func (a *WorkerRag) startragworker(w http.ResponseWriter, r *http.Request) {

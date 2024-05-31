@@ -22,19 +22,15 @@ func main() {
 
 	go NewServerEngine(ctx, "0.0.0.0", "9876").StartServer() // Start the Engine Socket
 
-	workerBud := new(workers.WorkerChat)
-	workerRag := new(workers.WorkerRag)
-
 	// Register Workers
 	go registerWorkes(
-		workerBud.Spawn(ctx, "chat", bud),
+		new(workers.WorkerChat).Spawn(ctx, "chat", bud),
+		new(workers.WorkerRag).Spawn(ctx, "rag", bud),
 		new(workers.WorkerListener).AddWorkers(Workers).Spawn(ctx, "listen", bud),
-		workerRag.Spawn(ctx, "rag", bud),
 	)
 
-	bud.ExtendRoutes(
-		workerRag,
-	).Start("9875")
+	// Start the HTTP SERVER
+	bud.WithCors().Start("9875")
 }
 
 func registerWorkes(workers ...workers.IWorker) {

@@ -15,15 +15,16 @@ type BudAPI struct {
 	Middleware
 }
 
-func (a *BudAPI) ExtendRoutes(apis ...IAPI) *BudAPI {
+// FIXME: THIS FUNCTION IS RECEIVING A NIL POINTER, WHY?..
+func (a *BudAPI) ExtendRoutes(apis ...IAPI) {
 	for _, api := range apis {
 		api.RegisterHandlers()
 	}
-	return a
 }
 
-func (a *BudAPI) WithCors() {
+func (a *BudAPI) WithCors() *BudAPI {
 	a.Middleware = chain(cors, defaultHandler)
+	return a
 }
 
 func NewBudAPI() *BudAPI {
