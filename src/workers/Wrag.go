@@ -256,17 +256,16 @@ func (a *WorkerRag) RegisterHandlers() {
 	// Dir ROUTES
 	a.POST("/startrag", a.startragworker)
 	a.POST("/stoprag", a.quitragworker)
-	// a.POST("/dir", a.dir)
-	// a.GET("/onedir/{dirname}", a.getOneDir)
-	// a.GET("/alldirs", a.getAllDirs)
-	// a.PUT("/dir/{dirname}", a.updateDir)
-	// a.DELETE("/dir", a.deleteDir)
-	// a.DELETE("/alldirs", a.deleteAllDirs)
-	//
-	// // Ask
-	// a.POST("/ask", a.dir)
-	// a.POST("/askbase", a.dir)
-	// a.POST("/askfile", a.dir)
+	a.POST("/dir", a.dir)
+	a.GET("/onedir/{dirname}", a.getOneDir)
+	a.GET("/alldirs", a.getAllDirs)
+	a.PUT("/dir/{dirname}", a.updateDir)
+	a.DELETE("/dir", a.deleteDir)
+	a.DELETE("/alldirs", a.deleteAllDirs)
+
+	// Ask
+	// a.POST("/chat", a.dir)
+	// a.POST("/ragchat", a.dir)
 }
 
 func (a *WorkerRag) startragworker(w http.ResponseWriter, r *http.Request) {
