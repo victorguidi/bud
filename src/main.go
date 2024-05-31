@@ -22,14 +22,19 @@ func main() {
 
 	go NewServerEngine(ctx, "0.0.0.0", "9876").StartServer() // Start the Engine Socket
 
+	workerBud := new(workers.WorkerChat)
+	workerRag := new(workers.WorkerRag)
+
 	// Register Workers
 	go registerWorkes(
-		new(workers.WorkerChat).Spawn(ctx, "chat", bud),
+		workerBud.Spawn(ctx, "chat", bud),
 		new(workers.WorkerListener).AddWorkers(Workers).Spawn(ctx, "listen", bud),
-		new(workers.WorkerRag).Spawn(ctx, "rag", bud),
+		workerRag.Spawn(ctx, "rag", bud),
 	)
 
-	NewBudAPI(bud).AddWorkers(Workers).RegisterHandlers().Start("9875")
+	bud.ExtendRoutes(
+		workerRag,
+	).Start("9875")
 }
 
 func registerWorkes(workers ...workers.IWorker) {

@@ -2,7 +2,9 @@ package workers
 
 import (
 	"context"
+	"encoding/json"
 	"log"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -25,7 +27,7 @@ type WorkerRag struct {
 }
 
 type WorkerRagConfig struct {
-	Dir string
+	Dir string `json:"dir"`
 }
 
 type ragtrigger struct {
@@ -242,3 +244,87 @@ func (w *WorkerRag) AskBase(question string) error {
 	}
 	return nil
 }
+
+// HTTP ROUTES
+type DirBody struct {
+	Dir []string `json:"dir"`
+}
+
+func (a *WorkerRag) RegisterHandlers() {
+	// Dir ROUTES
+	a.GET("/test", a.test)
+	a.POST("/startrag", a.startragworker)
+	// a.POST("/stoprag", a.quitragworker)
+	// a.POST("/dir", a.dir)
+	// a.GET("/onedir/{dirname}", a.getOneDir)
+	// a.GET("/alldirs", a.getAllDirs)
+	// a.PUT("/dir/{dirname}", a.updateDir)
+	// a.DELETE("/dir", a.deleteDir)
+	// a.DELETE("/alldirs", a.deleteAllDirs)
+	//
+	// // Ask
+	// a.POST("/ask", a.dir)
+	// a.POST("/askbase", a.dir)
+	// a.POST("/askfile", a.dir)
+}
+
+func (a *WorkerRag) test(w http.ResponseWriter, r *http.Request) {
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "Worker Dir started",
+	})
+}
+
+func (a *WorkerRag) startragworker(w http.ResponseWriter, r *http.Request) {
+	go a.Run()
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "Worker Dir started",
+	})
+}
+
+func (a *WorkerRag) quitragworker(w http.ResponseWriter, r *http.Request) {
+	a.Stop()
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "Stopping Work Dir",
+	})
+}
+
+func (a *WorkerRag) dir(w http.ResponseWriter, r *http.Request) {
+	var dir DirBody
+	json.NewDecoder(r.Body).Decode(&dir)
+
+	cmd := []string{"new"}
+	cmd = append(cmd, dir.Dir...)
+	a.Call(cmd)
+
+	json.NewEncoder(w).Encode(dir)
+}
+
+func (a *WorkerRag) getOneDir(w http.ResponseWriter, r *http.Request) {
+	dirname := r.PathValue("dirname")
+	dir := WorkerRagConfig{}
+	err := a.Get(dirname, &dir)
+	if err != nil {
+		http.Error(w, "Something Went Wrong", http.StatusBadGateway)
+	}
+	json.NewEncoder(w).Encode(dir)
+}
+
+func (a *WorkerRag) getAllDirs(w http.ResponseWriter, r *http.Request) {
+	dirs := make([]WorkerRagConfig, 0)
+	err := a.GetAll(&dirs)
+	if err != nil {
+		http.Error(w, "Something Went Wrong", http.StatusBadGateway)
+	}
+	json.NewEncoder(w).Encode(dirs)
+}
+
+func (a *WorkerRag) updateDir(w http.ResponseWriter, r *http.Request) {}
+
+func (a *WorkerRag) deleteDir(w http.ResponseWriter, r *http.Request) {}
+
+func (a *WorkerRag) deleteAllDirs(w http.ResponseWriter, r *http.Request) {}
+
+// mux.HandleFunc("/task/{id}/", func(w http.ResponseWriter, r *http.Request) {
+//   id := r.PathValue("id")
+//   fmt.Fprintf(w, "handling task with id=%v\n", id)
+// })

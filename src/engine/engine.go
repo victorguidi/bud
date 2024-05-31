@@ -12,10 +12,11 @@ type Engine struct {
 	EngineProperties[Engine]
 	context.Context
 	AudioEngine
+	BudAPI
 }
 
 type EngineProperties[T any] struct {
-	database.SqlDB[T]
+	database.ISqlDB[T]
 	database.IVectorDB
 	api.OllamaAPI
 }
@@ -25,7 +26,7 @@ func New() *Engine {
 		EngineProperties[Engine]{
 			OllamaAPI: *api.NewOllamaAPI(),
 			IVectorDB: database.NewPostgresVectorDB(),
-			SqlDB:     *database.NewSqlDB[Engine](),
+			ISqlDB:    database.NewSqlDB[Engine](),
 		},
 		context.Background(),
 		AudioEngine{
@@ -33,11 +34,8 @@ func New() *Engine {
 			AudioResponseChan: make(chan string),
 			StopListenerChan:  make(chan bool),
 		},
+		*NewBudAPI(),
 	}
-}
-
-func (e *EngineProperties[T]) DatabaseType(T) {
-	e.SqlDB = *database.NewSqlDB[T]()
 }
 
 func (e *Engine) Run() {

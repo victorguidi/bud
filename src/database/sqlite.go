@@ -14,6 +14,7 @@ type SqlDB[T any] struct {
 type Engine struct{}
 
 type ISqlDB[T any] interface {
+	Init() error
 	Get(id string, obj *T) error
 	GetAll(objs *[]T) error
 	Insert(obj *T) error
@@ -46,7 +47,7 @@ func NewSqlDB[T any]() ISqlDB[T] {
 }
 
 // TODO: REGISTER A NEW WORKER ON THE TABLE AUTOMATIC
-func (d *SqlDB[Engine]) Init() error {
+func (d SqlDB[T]) Init() error {
 	if _, err := d.db.Exec(`
     CREATE TABLE IF NOT EXISTS dirs (
     id VARCHAR(128) PRIMARY KEY,
