@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	workers "gitlab.com/bud.git/src/workers/RagWorker"
+
 	"gitlab.com/bud.git/src/engine"
 )
 
@@ -28,6 +30,8 @@ func (w *WorkerListener) GetWorkerID() string {
 }
 
 func (w *WorkerListener) Spawn(ctx context.Context, id string, engine *engine.Engine, args ...any) IWorker {
+	var r workers.RAG
+	_ = r
 	return &WorkerListener{
 		Context:  ctx,
 		WorkerID: id,
