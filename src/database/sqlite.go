@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"path/filepath"
+	"reflect"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -15,12 +16,12 @@ type Engine struct{}
 
 type ISqlDB[T any] interface {
 	Init() error
-	Get(id string, obj *T) error
-	GetAll(objs *[]T) error
-	Insert(obj *T) error
-	Update(id string, obj *T) error
-	DeleteOne(id string) error
-	Clean() error
+	Get(query string, obj *T, params ...any) error
+	GetAll(query string, objs *[]T) error
+	Insert(query string, obj *T, params ...any) error
+	Update(query string, obj *T) error
+	DeleteOne(query string) error
+	Clean(query string) error
 	Run(query string) error
 }
 
@@ -77,20 +78,6 @@ func (d SqlDB[T]) Init() error {
 	return nil
 }
 
-// func (d *SqlDB) InsertDirs(path string) error {
-// 	dirId, err := uuid.NewUUID()
-// 	if err != nil {
-// 		return err
-// 	}
-//
-// 	query := "INSERT INTO dirs (id, dir) VALUES($1, $2)"
-// 	_, err = d.db.Exec(query, dirId, path)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	return nil
-// }
-//
 // func (d *SqlDB) SelectDirs() ([]TableDirs, error) {
 // 	query := "SELECT * FROM dirs"
 // 	// query := "SELECT * FROM dirs WHERE created_at >= datetime(CURRENT_TIMESTAMP, '-30 seconds') OR updated_at >= datetime(CURRENT_TIMESTAMP, '-30 seconds');"
@@ -126,40 +113,32 @@ func (d SqlDB[T]) Run(query string) error {
 	return err
 }
 
-func (d SqlDB[T]) Get(id string, obj *T) error {
-	query := "SELECT * FROM table WHERE id = ?"
-	return d.querySingle(query, obj, id)
+func (d SqlDB[T]) Get(query string, obj *T, params ...any) error {
+	return d.querySingle(query, obj, params)
 }
 
-func (d SqlDB[T]) GetAll(objs *[]T) error {
-	query := "SELECT * FROM table"
+func (d SqlDB[T]) GetAll(query string, objs *[]T) error {
 	return d.queryMultiple(query, objs)
 }
 
-func (d SqlDB[T]) Insert(obj *T) error {
-	// Example insert query
-	query := "INSERT INTO table (columns) VALUES (values)"
-	// You will need to fill the values and columns accordingly
+func (d SqlDB[T]) Insert(query string, obj *T, params ...any) error {
+	// query := "INSERT INTO table (columns) VALUES (values)"
+	_, err := d.db.Exec(query, params...)
+	return err
+}
+
+func (d SqlDB[T]) Update(query string, obj *T) error {
+	// query := "UPDATE table SET columns = values WHERE id = ?"
 	_, err := d.db.Exec(query)
 	return err
 }
 
-func (d SqlDB[T]) Update(id string, obj *T) error {
-	// Example update query
-	query := "UPDATE table SET columns = values WHERE id = ?"
-	// You will need to fill the columns and values accordingly
-	_, err := d.db.Exec(query, id)
+func (d SqlDB[T]) DeleteOne(query string) error {
+	_, err := d.db.Exec(query)
 	return err
 }
 
-func (d SqlDB[T]) DeleteOne(id string) error {
-	query := "DELETE FROM table WHERE id = ?"
-	_, err := d.db.Exec(query, id)
-	return err
-}
-
-func (d SqlDB[T]) Clean() error {
-	query := "DELETE FROM table"
+func (d SqlDB[T]) Clean(query string) error {
 	_, err := d.db.Exec(query)
 	return err
 }
@@ -176,13 +155,31 @@ func (d SqlDB[T]) queryMultiple(query string, objs *[]T, args ...interface{}) er
 	}
 	defer rows.Close()
 
+	err = mapRowsToStruct(rows, objs)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func mapRowsToStruct(rows *sql.Rows, objs interface{}) error {
+	sliceValue := reflect.Indirect(reflect.ValueOf(objs))
+	elemType := sliceValue.Type().Elem()
+
 	for rows.Next() {
-		var obj T
-		err := rows.Scan(&obj)
+		obj := reflect.New(elemType).Elem()
+		fields := make([]interface{}, obj.NumField())
+		for i := 0; i < obj.NumField(); i++ {
+			fields[i] = obj.Field(i).Addr().Interface()
+		}
+
+		err := rows.Scan(fields...)
 		if err != nil {
 			return err
 		}
-		*objs = append(*objs, obj)
+
+		sliceValue.Set(reflect.Append(sliceValue, obj))
 	}
+
 	return rows.Err()
 }

@@ -3,6 +3,7 @@ package workers
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -10,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"gitlab.com/bud.git/src/api"
 	"gitlab.com/bud.git/src/database"
 	"gitlab.com/bud.git/src/engine"
@@ -27,7 +29,10 @@ type WorkerRag struct {
 }
 
 type WorkerRagConfig struct {
-	Dir string `json:"dir"`
+	Id         string `json:"id"`
+	Dir        string `json:"dir"`
+	Created_at string `json:"created_at"`
+	Updated_at string `json:"updated_at"`
 }
 
 type ragtrigger struct {
@@ -43,7 +48,6 @@ func (w *WorkerRag) GetWorkerState() WState {
 }
 
 func (w *WorkerRag) Spawn(ctx context.Context, id string, engine *engine.Engine, args ...any) IWorker {
-	log.Println("HELLO")
 	return &WorkerRag{
 		Context:     ctx,
 		WorkerID:    id,
@@ -106,7 +110,15 @@ func (w *WorkerRag) Call(args ...any) {
 				switch cmd[0] {
 				case "new":
 					for _, dir := range cmd[1:] {
-						err := w.Insert(&WorkerRagConfig{})
+						id, err := uuid.NewUUID()
+						if err != nil {
+							log.Println("ERROR GENERATING ID FOR DIR: ", dir)
+						}
+						err = w.Insert(
+							"INSERT INTO dirs (id, dir) VALUES($1, $2);",
+							&WorkerRagConfig{},
+							id, dir,
+						)
 						if err != nil {
 							log.Println("ERROR INSERTING DIR: ", dir)
 						}
@@ -133,8 +145,11 @@ func (w *WorkerRag) Call(args ...any) {
 // New files are considered if they were created or edit in the last 60 seconds
 func (w *WorkerRag) EmbedFiles(newDir bool) error {
 	dirs := make([]WorkerRagConfig, 0)
-	err := w.GetAll(&dirs)
+	err := w.GetAll(
+		"SELECT * FROM dirs;",
+		&dirs)
 	if err != nil {
+		log.Println("ERROR GETTING DIRS.", err)
 		return err
 	}
 
@@ -200,14 +215,20 @@ func (w *WorkerRag) EmbedFiles(newDir bool) error {
 				return err
 			}
 
-			embedding, err := w.GenerateEmbedding(w.Context, string(fileBytes))
+			chunks, err := utils.DevideInChunks(string(fileBytes), 150)
 			if err != nil {
 				return err
 			}
+			for i, chunk := range chunks {
+				embedding, err := w.GenerateEmbedding(w.Context, string(chunk.Text))
+				if err != nil {
+					return err
+				}
 
-			err = w.Save(file.Name(), string(fileBytes), embedding.Embedding)
-			if err != nil {
-				return err
+				err = w.Save(fmt.Sprintf("%s_%d", fileName, i), string(chunk.Text), embedding.Embedding)
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
@@ -296,7 +317,10 @@ func (a *WorkerRag) dir(w http.ResponseWriter, r *http.Request) {
 func (a *WorkerRag) getOneDir(w http.ResponseWriter, r *http.Request) {
 	dirname := r.PathValue("dirname")
 	dir := WorkerRagConfig{}
-	err := a.Get(dirname, &dir)
+	err := a.Get(
+		"SELECT * FROM dirs WHERE dir=$1;",
+		&dir,
+		dirname)
 	if err != nil {
 		http.Error(w, "Something Went Wrong", http.StatusBadGateway)
 	}
@@ -305,7 +329,9 @@ func (a *WorkerRag) getOneDir(w http.ResponseWriter, r *http.Request) {
 
 func (a *WorkerRag) getAllDirs(w http.ResponseWriter, r *http.Request) {
 	dirs := make([]WorkerRagConfig, 0)
-	err := a.GetAll(&dirs)
+	err := a.GetAll(
+		"SELECT * FROM dirs;",
+		&dirs)
 	if err != nil {
 		http.Error(w, "Something Went Wrong", http.StatusBadGateway)
 	}

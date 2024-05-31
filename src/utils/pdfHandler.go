@@ -34,7 +34,7 @@ func (p *PDFHandler) ConvertToTxt(dir, file string) (string, error) {
 	defer func() {
 		os.Remove(filepath.Join(dir, file))
 	}()
-	newFile := strings.ReplaceAll(file, ".pdf", ".txt")
+	newFile := strings.ReplaceAll(file, ".pdf", "")
 	cmd := exec.Command("pdftotext", path.Join(dir, file), path.Join(dir, newFile))
 	if err := cmd.Run(); err != nil {
 		log.Printf("Error on convert pdf to txt: %v", err)

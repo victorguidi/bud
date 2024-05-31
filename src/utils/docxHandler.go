@@ -34,7 +34,7 @@ func (d *DocxHandler) ConvertToTxt(dir, file string) (string, error) {
 	defer func() {
 		os.Remove(filepath.Join(dir, file))
 	}()
-	newFile := strings.ReplaceAll(file, ".docx", ".txt")
+	newFile := strings.ReplaceAll(file, ".docx", "")
 	cmd := exec.Command("docx2text", path.Join(dir, file), path.Join(dir, newFile))
 	if err := cmd.Run(); err != nil {
 		log.Printf("Error on convert pdf to txt: %v", err)

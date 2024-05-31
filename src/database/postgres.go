@@ -70,7 +70,7 @@ func (p *PostgresVectorDB) Save(docName, content string, embeddings []float32) e
 
 func (p *PostgresVectorDB) Retrieve(embeddings []float32) (*VectorsTable, error) {
 	// embeddingStr := strings.Trim(strings.Join(strings.Fields(fmt.Sprint(embeddings)), ","), "{}")
-	query := "SELECT *, embeddings <=> $1::vector AS similarity FROM embeddings ORDER BY similarity LIMIT 1;"
+	query := "SELECT *, embeddings <=> $1::vector AS similarity FROM embeddings ORDER BY similarity LIMIT 5;"
 
 	rows, err := p.db.Query(query, pgvector.NewVector(embeddings))
 	if err != nil {
@@ -90,7 +90,7 @@ func (p *PostgresVectorDB) Retrieve(embeddings []float32) (*VectorsTable, error)
 		log.Printf("\n================\nCLOSEST VECTOR: %s\n================\n", vTable.Text)
 
 		log.Printf("\n================\nCOSINE DISTANCE: %f\n================\n", cosineDistance)
-		if cosineDistance <= 0.5 {
+		if cosineDistance <= 0.55 {
 			vectorTable = append(vectorTable, vTable)
 		}
 	}
