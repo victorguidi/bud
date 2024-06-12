@@ -3,6 +3,7 @@ module gitlab.com/bud.git
 go 1.22.3
 
 require (
+	github.com/a-h/templ v0.2.707
 	github.com/ggerganov/whisper.cpp/bindings/go v0.0.0-20240527073509-c7b698867877
 	github.com/go-audio/aiff v1.1.0
 	github.com/go-audio/audio v1.0.0

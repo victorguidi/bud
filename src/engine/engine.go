@@ -39,17 +39,17 @@ func New() *Engine {
 }
 
 func (e *Engine) Run() {
-	err := e.Initialize()
-	if err != nil {
-		log.Println("ERROR INITIALING THE VECTOR DB", err)
-		return
-	}
-
-	err = e.Init()
+	err := e.Init()
 	if err != nil {
 		log.Println("ERROR INITIALING THE SQLITE DB", err)
 		return
 	}
+
+	// err = e.Initialize()
+	// if err != nil {
+	// 	log.Println("ERROR INITIALING THE VECTOR DB", err)
+	// 	return
+	// }
 }
 
 func (e *Engine) Config() {}

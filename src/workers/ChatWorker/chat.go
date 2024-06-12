@@ -10,6 +10,7 @@ import (
 	"gitlab.com/bud.git/src/api"
 	"gitlab.com/bud.git/src/database"
 	"gitlab.com/bud.git/src/engine"
+	"gitlab.com/bud.git/src/workers"
 )
 
 type WorkerChat struct {
@@ -18,7 +19,7 @@ type WorkerChat struct {
 	TriggerChan chan trigger
 	QuitChan    chan bool
 	*engine.Engine
-	WState
+	workers.WState
 	database.ISqlDB[WorkerChat]
 }
 
@@ -32,24 +33,25 @@ func (w *WorkerChat) GetWorkerID() string {
 	return w.WorkerID
 }
 
-func (w *WorkerChat) GetWorkerState() WState {
+func (w *WorkerChat) GetWorkerState() workers.WState {
 	return w.WState
 }
 
-func (w *WorkerChat) Spawn(ctx context.Context, id string, engine *engine.Engine, args ...any) IWorker {
+func (w *WorkerChat) Spawn(ctx context.Context, id string, engine *engine.Engine, args ...any) workers.IWorker {
 	return &WorkerChat{
 		Context:     ctx,
 		WorkerID:    id,
 		TriggerChan: make(chan trigger),
 		QuitChan:    make(chan bool),
 		Engine:      engine,
-		WState:      ENABLED,
+		WState:      workers.ENABLED,
 	}
 }
 
 func (w *WorkerChat) Run() {
-	w.WState = ENABLED
+	w.WState = workers.ENABLED
 	log.Println("STARTING WORKER", w.WorkerID)
+	w.RegisterHandlers()
 	// startTime := time.Now()
 	for {
 		select {
@@ -74,7 +76,7 @@ func (w *WorkerChat) Run() {
 }
 
 func (w *WorkerChat) Stop() {
-	w.WState = DISABLED
+	w.WState = workers.DISABLED
 	w.QuitChan <- true
 }
 

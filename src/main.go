@@ -10,6 +10,7 @@ import (
 
 	"gitlab.com/bud.git/src/engine"
 	"gitlab.com/bud.git/src/workers"
+	wchat "gitlab.com/bud.git/src/workers/ChatWorker"
 )
 
 var Workers = make(map[string]workers.IWorker)
@@ -24,8 +25,8 @@ func main() {
 
 	// Register Workers
 	go registerWorkes(
-		new(workers.WorkerChat).Spawn(ctx, "chat", bud),
-		new(workers.WorkerRag).Spawn(ctx, "rag", bud),
+		new(wchat.WorkerChat).Spawn(ctx, "chat", bud),
+		// new(workers.WorkerRag).Spawn(ctx, "rag", bud),
 		new(workers.WorkerListener).AddWorkers(Workers).Spawn(ctx, "listen", bud),
 	)
 

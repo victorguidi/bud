@@ -2,9 +2,16 @@ package engine
 
 import (
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 )
+
+var tmpl *template.Template
+
+func init() {
+	tmpl = template.Must(template.ParseGlob("web/*.html"))
+}
 
 type IAPI interface {
 	RegisterHandlers()
@@ -35,6 +42,9 @@ func NewBudAPI() *BudAPI {
 }
 
 func (a *BudAPI) Start(port string) {
+	// fs := http.FileServer(http.Dir("web/static/"))
+	// a.Mux.Handle("/static/", http.StripPrefix("/static/", fs))
+	// a.SERVEPAGE("/home/", a.INDEX)
 	log.Printf("Http Server Listening on: %s", port)
 	log.Fatal(http.ListenAndServe("localhost:"+port, a.Mux))
 }
@@ -87,4 +97,16 @@ func (a *BudAPI) PUT(path string, handler http.HandlerFunc) {
 
 func (a *BudAPI) DELETE(path string, handler http.HandlerFunc) {
 	a.Mux.HandleFunc(fmt.Sprintf("DELETE %s", path), a.Middleware(handler))
+}
+
+func (a *BudAPI) SERVEPAGE(path string, handler http.HandlerFunc) {
+	a.Mux.HandleFunc(fmt.Sprintf("GET %s", path), handler)
+}
+
+func (a *BudAPI) INDEX(w http.ResponseWriter, r *http.Request) {
+	err := tmpl.ExecuteTemplate(w, "index.html", nil)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 }
