@@ -29,3 +29,5 @@ samples
 src/include
 src/lib
 src/models
+src/tmp
+tmp

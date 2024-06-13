@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/a-h/templ"
+	"gitlab.com/bud.git/src/view/layout"
 )
 
 type IAPI interface {
@@ -40,6 +41,7 @@ func NewBudAPI() *BudAPI {
 func (a *BudAPI) Start(port string) {
 	fs := http.FileServer(http.Dir(filepath.Join("src", "static")))
 	a.Mux.Handle("/static/", http.StripPrefix("/static/", fs))
+	a.Mux.Handle("/", templ.Handler(layout.Base()))
 	log.Printf("Http Server Listening on: %s", port)
 	log.Fatal(http.ListenAndServe("localhost:"+port, a.Mux))
 }

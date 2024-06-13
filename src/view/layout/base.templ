@@ -8,10 +8,26 @@ templ Base() {
 			<meta name="viewport" content="width=device-width, initial-scale=1"/>
 			<title></title>
 			<link href="/static/css/output.css" rel="stylesheet"/>
+			<script src="https://unpkg.com/htmx.org@1.9.12"></script>
 		</head>
-		<body class="bg-emerald-600">
+		<body class="bg-emerald-600 h-screen w-screen flex flex-col">
 			<h1 class="text-red-900">Config Page</h1>
-			{ children... }
+			<div class="flex flex-row w-full h-full">
+				<div class="bg-green-950 flex flex-col w-1/12 text-white">
+					<button hx-get="/chatconfig" hx-swap="outerHTML" hx-target="#mainarea">
+						Chat Config
+					</button>
+					<button hx-get="/chatconfig" hx-swap="outerHTML">
+						Rag Config
+					</button>
+				</div>
+				<div class="bg-yellow-800 flex w-11/12">
+					<div id="mainarea">
+						<h1>DEFAULT CONFIG PLACE</h1>
+					</div>
+				</div>
+				{ children... }
+			</div>
 		</body>
 	</html>
 }

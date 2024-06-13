@@ -1,11 +1,12 @@
-root = "."
+root = "./src"
 testdata_dir = "testdata"
 tmp_dir = "tmp"
 
 [build]
 args_bin = []
 bin = "./tmp/main"
-cmd = "go build -o ./tmp/main ."
+# cmd = "C_INCLUDE_PATH=./src/include LIBRARY_PATH=./src/lib go build -v -o ./tmp/main ./src/"
+cmd = "C_INCLUDE_PATH=./src/include LIBRARY_PATH=./src/lib go build -v -o ./tmp/main ./src/"
 delay = 1000
 exclude_dir = ["assets", "tmp", "vendor", "testdata"]
 exclude_file = []

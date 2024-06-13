@@ -5,6 +5,12 @@ LIBRARY_PATH=$(PWD)/src/lib
 run: build
 	@./budengine
 
+templ:
+	@templ generate -watch -proxy=http://localhost:9875
+
+css:
+	@cd ./src && tailwindcss -i ./static/css/input.css -o ./static/css/output.css --watch
+
 # Define the build target
 build: cli
 	@cd ./src && tailwindcss -i ./static/css/input.css -o ./static/css/output.css --minify

@@ -1,11 +1,13 @@
 package wchat
 
+//"gitlab.com/bud.git/src/view/layout"
 import (
-	"gitlab.com/bud.git/src/view/layout"
+	"gitlab.com/bud.git/src/view/components"
 )
 
 templ WorkerChatView() {
-	@layout.Base() {
-		<h1 class="text-sky-900">WHY IS THE COLOR NOT WORKING FROM CHAT WORKER</h1>
-	}
+	<div class="bg-teal-700 flex flex-row w-full">
+		@components.Card("Config One")
+		@components.Card("Config Two")
+	</div>
 }

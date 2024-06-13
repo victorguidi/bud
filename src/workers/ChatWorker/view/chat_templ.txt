@@ -1,0 +1,2 @@
+<div class=\"bg-teal-700 flex flex-row w-full\">
+</div>
