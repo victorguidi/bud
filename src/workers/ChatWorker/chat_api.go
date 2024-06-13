@@ -1,19 +1,10 @@
 package workers
 
 import (
-	"net/http"
-
-	"gitlab.com/bud.git/src/workers/ChatWorker/wchat"
+	"github.com/a-h/templ"
+	wchat "gitlab.com/bud.git/src/workers/ChatWorker/view"
 )
 
 func (a *WorkerChat) RegisterHandlers() {
-	a.GET("/chatconfig", a.handleShowChatConfig)
-}
-
-func (a *WorkerChat) handleShowChatConfig(w http.ResponseWriter, r *http.Request) {
-	err := a.Render(w, r, wchat.WorkerChatView())
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
+	a.SERVEPAGE("/chatconfig", templ.Handler(wchat.WorkerChatView()))
 }
